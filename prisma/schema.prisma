@@ -79,11 +79,15 @@ model Product{
   isBoosted  Boolean
   contactPhone    String
   contactEmail    String
-  viewCount   Int
-  type  String  
+  viewCount    Int @default(0)
+  type  String 
   status  ProductStatus @default(ACTIVE)
   message Message[]
-  images String[]
+  image1 String?
+  image2 String?
+  image3 String?
+  image4 String?
+  image5 String?
   favorite Favorite[]
   
 

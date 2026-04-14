@@ -217,12 +217,12 @@ export default function Header() {
                           My Products
                         </Link>
                         
-                        <Link href="/addresses" onClick={() => setIsDropdownOpen(false)} className="flex items-center px-4 py-2 text-gray-700 transition-colors hover:bg-blue-50 hover:text-blue-600">
+                        <Link href="/pages/user/address" onClick={() => setIsDropdownOpen(false)} className="flex items-center px-4 py-2 text-gray-700 transition-colors hover:bg-blue-50 hover:text-blue-600">
                           <svg className="w-5 h-5 mr-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                           </svg>
-                          My Addresses
+                          My Address
                         </Link>
                         
                         <Link href="/favorites" onClick={() => setIsDropdownOpen(false)} className="flex items-center px-4 py-2 text-gray-700 transition-colors hover:bg-blue-50 hover:text-blue-600">
@@ -319,7 +319,7 @@ export default function Header() {
                   <hr className="my-2 border-blue-500" />
                   <Link href="/profile" onClick={() => setIsMenuOpen(false)} className="block py-2.5 text-white hover:text-yellow-300">My Profile</Link>
                   <Link href="/my-products" onClick={() => setIsMenuOpen(false)} className="block py-2.5 text-white hover:text-yellow-300">My Products</Link>
-                  <Link href="/addresses" onClick={() => setIsMenuOpen(false)} className="block py-2.5 text-white hover:text-yellow-300">My Addresses</Link>
+                  <Link href="/pages/user/address" onClick={() => setIsMenuOpen(false)} className="block py-2.5 text-white hover:text-yellow-300">My Address</Link>
                   <Link href="/favorites" onClick={() => setIsMenuOpen(false)} className="block py-2.5 text-white hover:text-yellow-300">Favorites</Link>
                   <Link href="/messages" onClick={() => setIsMenuOpen(false)} className="block py-2.5 text-white hover:text-yellow-300">Messages</Link>
                   <hr className="my-2 border-blue-500" />

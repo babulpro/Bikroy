@@ -1,56 +1,126 @@
+// src/app/api/address/route.js
 import { DecodedJwtToken } from "@/app/Utility/authFunction/JwtHelper";
 import prisma from "@/app/Utility/prisma/prisma";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
- 
-
-
- export async function POST(request,response){
-    try{
+// POST - Create new address
+export async function POST(request) {
+    try {
         const reqBody = await request.json(); 
         const cookieStore = await cookies();
         const token = cookieStore.get('token')?.value;
 
-        if(!token){
-            return NextResponse.json({status:"fail",msg:"Unauthorized"},{status:401})
+        if (!token) {
+            return NextResponse.json(
+                { status: "fail", msg: "Unauthorized" }, 
+                { status: 401 }
+            );
         }
 
-        const {area,city,state, country,latitude,longitude} = reqBody;
+        const { area, city, state, country, latitude, longitude } = reqBody;
 
-        if(!area || !city || !state  || !country){
-            return NextResponse.json({status:"fail",msg:"please fill all the fields"})
+        // Validate required fields
+        if (!area || !city || !country) {
+            return NextResponse.json(
+                { status: "fail", msg: "Please fill all required fields (area, city, country)" }, 
+                { status: 400 }
+            );
         }
 
-         const decodedToken = await DecodedJwtToken(token)
-         const findUser = await prisma.user.findUnique({
-            where:{
-                id:decodedToken.id
+        const decodedToken = await DecodedJwtToken(token);
+        
+        if (!decodedToken || !decodedToken.id) {
+            return NextResponse.json(
+                { status: "fail", msg: "Invalid token" }, 
+                { status: 401 }
+            );
+        }
+
+        const findUser = await prisma.user.findUnique({
+            where: {
+                id: decodedToken.id
             }
-         })
+        });
 
-         if(!findUser){
-            return NextResponse.json({status:"fail",msg:"user not found"},{status:404})
-         }
-        console.log(area,city,state, country,latitude,longitude,findUser.id)
+        if (!findUser) {
+            return NextResponse.json(
+                { status: "fail", msg: "User not found" }, 
+                { status: 404 }
+            );
+        }
 
-
-         const newAddress = await prisma.address.create({
-            data:{
-                userId:findUser.id,
-                country ,
-                state ,
-                area ,
-                latitude,city, 
-                longitude 
+        const newAddress = await prisma.address.create({
+            data: {
+                userId: findUser.id,
+                country: country,
+                state: state || "",
+                city: city,
+                area: area,
+                latitude: latitude || "",
+                longitude: longitude || ""
             }
-         })
+        });
 
+        return NextResponse.json(
+            { 
+                status: "success", 
+                msg: "Address created successfully", 
+                data: newAddress 
+            }, 
+            { status: 201 }
+        );
 
-        return NextResponse.json({status:"success",msg:"this is the user post request",data:newAddress})
-
+    } catch (error) {
+        console.error('Address creation error:', error);
+        return NextResponse.json(
+            { status: "fail", msg: error.message || "Something went wrong" }, 
+            { status: 500 }
+        );
     }
-    catch(e){
-        return NextResponse.json({status:"fail", msg:"something went wrong"},{status:500})
+}
+
+// GET - Fetch all addresses for the logged-in user
+export async function GET(request) {
+    try {
+        const cookieStore = await cookies();
+        const token = cookieStore.get('token')?.value;
+
+        if (!token) {
+            return NextResponse.json(
+                { status: "fail", msg: "Unauthorized" }, 
+                { status: 401 }
+            );
+        }
+
+        const decodedToken = await DecodedJwtToken(token);
+        
+        if (!decodedToken || !decodedToken.id) {
+            return NextResponse.json(
+                { status: "fail", msg: "Invalid token" }, 
+                { status: 401 }
+            );
+        }
+
+        const addresses = await prisma.address.findMany({
+            where: {
+                userId: decodedToken.id
+            },
+            orderBy: {
+                createdAt: 'desc'
+            }
+        });
+
+        return NextResponse.json({
+            status: "success",
+            data: addresses
+        });
+
+    } catch (error) {
+        console.error('Fetch addresses error:', error);
+        return NextResponse.json(
+            { status: "fail", msg: error.message || "Something went wrong" }, 
+            { status: 500 }
+        );
     }
- }
+}
