@@ -1,5 +1,5 @@
 // app/products/[id]/edit/page.jsx
-import ProductForm from '@/components/ProductForm';
+import ProductForm from '@/lib/productUpload/productForm';
 import { notFound } from 'next/navigation';
 
 async function getProduct(id) {

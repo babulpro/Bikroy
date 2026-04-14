@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { DecodedJwtToken } from "@/app/Utility/authFunction/JwtHelper";
 import prisma from "@/app/Utility/prisma/prisma";
-import { calculateDistance, formatDistance } from "@/app/Utility/locationUtils";
+import { calculateDistance, formatDistance } from "@/app/Utility/location/location";
 
 export async function POST(request) {
     try {
