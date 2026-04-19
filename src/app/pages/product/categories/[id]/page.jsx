@@ -330,7 +330,7 @@ export default function CategoryProductsPage() {
 // Product Card Component (Grid View)
 function ProductCard({ product, getProductImage }) {
   return (
-    <Link href={`/pages/product/${product.id}`} className="group">
+    <Link href={`/pages/product/productById/${product.id}`} className="group">
       <div className="overflow-hidden transition-all duration-300 bg-white rounded-lg shadow-md hover:shadow-xl hover:-translate-y-1">
         <div className="relative h-48 overflow-hidden">
           <img
