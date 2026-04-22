@@ -1,18 +1,12 @@
-// src/app/api/admin/category/getCategories/route.js
-
+// src/app/api/category/getCategory/route.js
 import { NextResponse } from "next/server";
 import prisma from "@/app/Utility/prisma/prisma";
-import { cookies } from "next/headers";
-import { DecodedJwtToken } from "@/app/Utility/authFunction/JwtHelper";
 
 // GET - Fetch all categories (Public - No authentication required)
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get('page')) || 1;
-    const limit = parseInt(searchParams.get('limit')) || 10;
     const search = searchParams.get('search') || '';
-    const skip = (page - 1) * limit;
 
     // Build filter
     const filter = {};
@@ -23,44 +17,38 @@ export async function GET(request) {
       ];
     }
 
-    // Get categories with pagination
-    const [categories, total] = await Promise.all([
-      prisma.category.findMany({
-        where: filter,
-        include: {
-          product: {
-            select: {
-              id: true,
-              name: true,
-              status: true
-            }
+    // Get all categories with product count
+    const categories = await prisma.category.findMany({
+      where: filter,
+      include: {
+        product: {
+          where: { status: 'ACTIVE' },
+          select: {
+            id: true
           }
-        },
-        orderBy: {
-          name: 'asc'
-        },
-        skip: skip,
-        take: limit
-      }),
-      prisma.category.count({ where: filter })
-    ]);
+        }
+      },
+      orderBy: {
+        name: 'asc'
+      }
+    });
 
     // Add product count to each category
     const categoriesWithCount = categories.map(category => ({
-      ...category,
+      id: category.id,
+      name: category.name,
+      slug: category.slug,
+      description: category.description,
+      icon: category.icon,
       productCount: category.product.length,
-      product: undefined // Remove product array from response
+      createdAt: category.createdAt,
+      updatedAt: category.updatedAt
     }));
 
     return NextResponse.json({
       status: "success",
       data: categoriesWithCount,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit)
-      }
+      total: categoriesWithCount.length
     });
 
   } catch (error) {

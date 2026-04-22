@@ -14,12 +14,79 @@ export default function CategoryPage() {
 
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState({ type: "", text: "" });
+  const [selectedCategoryType, setSelectedCategoryType] = useState("");
+
+  // Pre-defined categories with icons
+  const categoryIcons = {
+    "Mobiles": "📱",
+    "Electronics": "💻",
+    "Vehicles": "🚗",
+    "Property": "🏠",
+    "Home & Living": "🛋️",
+    "Pets & Animals": "🐕",
+    "Men's Fashion & Grooming": "👔",
+    "Hobbies, Sports & Kids": "⚽",
+    "Women's Fashion & Beauty": "💄",
+    "Business & Industry": "🏭",
+    "Education": "📚",
+    "Jobs": "💼",
+    "Essentials": "🛒",
+    "Services": "🔧",
+    "Agriculture": "🌾",
+    "Overseas Jobs": "✈️"
+  };
+
+  // All available icons for selection
+  const availableIcons = [
+    { icon: "📱", name: "Mobile" },
+    { icon: "💻", name: "Electronics" },
+    { icon: "🖥️", name: "Computer" },
+    { icon: "📺", name: "TV" },
+    { icon: "🎮", name: "Gaming" },
+    { icon: "📷", name: "Camera" },
+    { icon: "🎧", name: "Audio" },
+    { icon: "⌚", name: "Watch" },
+    { icon: "🚗", name: "Car" },
+    { icon: "🏠", name: "Property" },
+    { icon: "🛋️", name: "Furniture" },
+    { icon: "👕", name: "Clothing" },
+    { icon: "👗", name: "Fashion" },
+    { icon: "👟", name: "Shoes" },
+    { icon: "📚", name: "Books" },
+    { icon: "🎓", name: "Education" },
+    { icon: "💼", name: "Jobs" },
+    { icon: "🍔", name: "Food" },
+    { icon: "🏋️", name: "Sports" },
+    { icon: "🎨", name: "Art" },
+    { icon: "🐕", name: "Pets" },
+    { icon: "🌱", name: "Plants" },
+    { icon: "🔧", name: "Tools" },
+    { icon: "🎁", name: "Gifts" },
+    { icon: "⭐", name: "Featured" },
+    { icon: "✈️", name: "Travel" },
+    { icon: "🏭", name: "Industry" },
+    { icon: "💄", name: "Beauty" },
+    { icon: "⚽", name: "Sports" },
+    { icon: "🛒", name: "Shopping" },
+    { icon: "🌾", name: "Agriculture" },
+    { icon: "👔", name: "Men's Fashion" },
+    { icon: "💅", name: "Women's Fashion" },
+    { icon: "🐱", name: "Cats" },
+    { icon: "🐶", name: "Dogs" },
+    { icon: "🚲", name: "Bicycle" },
+    { icon: "🏍️", name: "Motorcycle" },
+    { icon: "🚚", name: "Truck" },
+    { icon: "🏢", name: "Office" },
+    { icon: "📞", name: "Phone" },
+    { icon: "🖨️", name: "Printer" },
+  ];
 
   const handleChange = (e) => {
     setForm({
       ...form,
       [e.target.name]: e.target.value,
     });
+    
     // Auto-generate slug from name
     if (e.target.name === "name") {
       const slug = e.target.value
@@ -28,6 +95,29 @@ export default function CategoryPage() {
         .replace(/^-|-$/g, "");
       setForm((prev) => ({ ...prev, slug }));
     }
+  };
+
+  // Handle quick category selection
+  const handleQuickCategorySelect = (categoryName) => {
+    const icon = categoryIcons[categoryName];
+    const slug = categoryName
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
+    
+    setForm({
+      name: categoryName,
+      slug: slug,
+      description: "",
+      icon: icon,
+    });
+    setSelectedCategoryType(categoryName);
+    setMsg({ type: "success", text: `✅ "${categoryName}" category selected!` });
+    setTimeout(() => setMsg({ type: "", text: "" }), 2000);
+  };
+
+  const handleIconSelect = (icon) => {
+    setForm(prev => ({ ...prev, icon: icon }));
   };
 
   const handleSubmit = async (e) => {
@@ -49,7 +139,7 @@ export default function CategoryPage() {
       if (res.ok && data.status === "success") {
         setMsg({ type: "success", text: "✅ " + data.msg });
         setForm({ name: "", slug: "", description: "", icon: "" });
-        // Refresh after 2 seconds
+        setSelectedCategoryType("");
         setTimeout(() => {
           router.refresh();
         }, 2000);
@@ -66,11 +156,32 @@ export default function CategoryPage() {
 
   return (
     <div className="min-h-screen py-12 bg-gradient-to-br from-blue-50 to-gray-100">
-      <div className="max-w-2xl px-4 mx-auto sm:px-6 lg:px-8">
+      <div className="max-w-4xl px-4 mx-auto sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold text-gray-800">Add New Category</h1>
           <p className="mt-2 text-gray-600">Create a new product category</p>
+        </div>
+
+        {/* Quick Category Selection */}
+        <div className="mb-6">
+          <h3 className="mb-3 text-sm font-medium text-gray-700">Quick Select from Common Categories:</h3>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
+            {Object.keys(categoryIcons).map((catName) => (
+              <button
+                key={catName}
+                onClick={() => handleQuickCategorySelect(catName)}
+                className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm transition-all ${
+                  selectedCategoryType === catName
+                    ? "bg-blue-600 text-white"
+                    : "bg-white text-gray-700 hover:bg-blue-50 border border-gray-200"
+                }`}
+              >
+                <span className="text-lg">{categoryIcons[catName]}</span>
+                <span>{catName}</span>
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Category Form */}
@@ -111,30 +222,61 @@ export default function CategoryPage() {
               />
             </div>
 
-            {/* Icon URL */}
+            {/* Icon Selection */}
             <div>
-              <label htmlFor="icon" className="block mb-1 text-sm font-medium text-gray-700">
-                Icon URL <span className="text-xs text-gray-400">(Optional)</span>
+              <label className="block mb-2 text-sm font-medium text-gray-700">
+                Category Icon <span className="text-xs text-gray-400">(Select an emoji)</span>
               </label>
-              <div className="flex space-x-3">
+              
+              {/* Current Icon Preview */}
+              {form.icon && (
+                <div className="flex items-center justify-between p-3 mb-3 rounded-lg bg-blue-50">
+                  <div className="flex items-center space-x-3">
+                    <span className="text-3xl">{form.icon}</span>
+                    <span className="text-sm text-gray-600">Selected Icon</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setForm(prev => ({ ...prev, icon: "" }))}
+                    className="text-red-500 hover:text-red-700"
+                  >
+                    Remove
+                  </button>
+                </div>
+              )}
+
+              {/* Icon Grid */}
+              <div className="p-4 rounded-lg bg-gray-50">
+                <p className="mb-3 text-xs text-gray-500">Click on an icon to select:</p>
+                <div className="grid grid-cols-8 gap-2 sm:grid-cols-10 md:grid-cols-12">
+                  {availableIcons.map((item) => (
+                    <button
+                      key={item.icon}
+                      type="button"
+                      onClick={() => handleIconSelect(item.icon)}
+                      className={`p-2 text-2xl hover:bg-gray-200 rounded-lg transition-colors ${
+                        form.icon === item.icon ? "bg-blue-100 ring-2 ring-blue-500" : ""
+                      }`}
+                      title={item.name}
+                    >
+                      {item.icon}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Manual Icon Input */}
+              <div className="mt-3">
+                <label className="block mb-1 text-xs text-gray-500">Or enter custom emoji:</label>
                 <input
                   type="text"
-                  id="icon"
                   name="icon"
                   value={form.icon}
                   onChange={handleChange}
-                  placeholder="https://example.com/icon.png or emoji (📱)"
-                  className="flex-1 px-4 py-2 text-gray-800 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="📱 (paste any emoji)"
+                  className="w-full px-4 py-2 text-gray-800 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  maxLength="2"
                 />
-                {form.icon && (
-                  <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-lg">
-                    {form.icon.startsWith("http") ? (
-                      <img src={form.icon} alt="preview" className="object-contain w-8 h-8" />
-                    ) : (
-                      <span className="text-2xl">{form.icon}</span>
-                    )}
-                  </div>
-                )}
               </div>
             </div>
 
@@ -150,7 +292,7 @@ export default function CategoryPage() {
                 onChange={handleChange}
                 rows="4"
                 placeholder="Describe what products belong in this category..."
-                className="w-full px-4 py-2 text-gray-800 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 text-gray-800 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
@@ -191,9 +333,10 @@ export default function CategoryPage() {
           <div className="p-4 mt-6 border border-blue-200 rounded-lg bg-blue-50">
             <h4 className="mb-2 text-sm font-semibold text-blue-800">💡 Tips:</h4>
             <ul className="space-y-1 text-sm text-blue-700">
+              <li>• Click on "Quick Select" buttons to automatically fill common categories</li>
               <li>• Category name should be unique and descriptive</li>
               <li>• Slug is automatically generated from the name</li>
-              <li>• You can use emoji as icon (e.g., 📱, 🚗, 🏠)</li>
+              <li>• Click on any emoji icon to select it for your category</li>
               <li>• Description helps users understand the category</li>
             </ul>
           </div>
