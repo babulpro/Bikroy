@@ -1,17 +1,11 @@
  
-import { fetchCategories } from '@/components/common/allFunctionCall/category';
+ import { fetchCategories } from '@/components/common/allFunctionCall/category';
 import CategoryItem from '@/components/pages/homepage/categoryItem';
 import Link from 'next/link';
-
-async function getCategories() {
-  const categories = await fetchCategories('/api/category/getCategory');
-  const data = await categories.json();
-  return data.data;
-}
+ 
 
 export default async function HomePage() {
-  const categories = await getCategories();
-  console.log('Fetched categories:', categories);
+ 
    
 
   const featuredProducts = [
@@ -41,8 +35,31 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Categories Section */}
-      <CategoryItem categories={categories} />
+      {/* Categories Section
+     
+     
+
+
+
+
+
+
+
+      <fetchCategories/>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
       {/* Featured Products Section */}
       <section className="py-16 bg-white">
