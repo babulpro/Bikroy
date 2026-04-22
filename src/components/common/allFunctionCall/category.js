@@ -1,9 +1,9 @@
  
 
 // Client-side helper
-export async function fetchCategories() {
+export async function fetchCategories(url) {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/category/getCategory`);
+    const response = await fetch(`${url} `);
     const data = await response.json();
     if (data.status === 'success') {
       return data.data;

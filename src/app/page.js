@@ -1,13 +1,17 @@
-// src/app/page.js
+ 
 import { fetchCategories } from '@/components/common/allFunctionCall/category';
 import CategoryItem from '@/components/pages/homepage/categoryItem';
 import Link from 'next/link';
 
+async function getCategories() {
+  const categories = await fetchCategories('/api/category/getCategory');
+  const data = await categories.json();
+  return data.data;
+}
+
 export default async function HomePage() {
-   const categories = await fetchCategories();
-   
- 
-  
+  const categories = await getCategories();
+  console.log('Fetched categories:', categories);
    
 
   const featuredProducts = [
