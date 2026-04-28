@@ -19,6 +19,7 @@ export default function ProductByIdPage() {
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [messageSent, setMessageSent] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState(null);
 
   useEffect(() => {
     if (id) {
@@ -33,9 +34,18 @@ export default function ProductByIdPage() {
         method: 'GET',
         credentials: 'include'
       });
-      setIsLoggedIn(response.ok);
+      if (response.ok) {
+        const data = await response.json();
+        setIsLoggedIn(true);
+        setCurrentUserId(data.user?.id); 
+      } else {
+        setIsLoggedIn(false);
+        setCurrentUserId(null);
+      }
     } catch (error) {
+      console.error('Auth check error:', error);
       setIsLoggedIn(false);
+      setCurrentUserId(null);
     }
   };
 
@@ -43,10 +53,11 @@ export default function ProductByIdPage() {
     try {
       setLoading(true);
       const response = await fetch(`/api/product/allProduct/productById?productId=${id}`);
-      const data = await response.json(); 
+      const data = await response.json();  
 
       if (data.success) {
         setProduct(data.data);
+        
         const firstImage = data.data.image1 || data.data.image2 || data.data.image3 || data.data.image4 || data.data.image5;
         setSelectedImage(firstImage);
       } else {
@@ -131,8 +142,12 @@ export default function ProductByIdPage() {
   const sellerPhone = product.contactPhone || product.user?.phone;
   const sellerEmail = product.contactEmail || product.user?.email;
   const sellerName = product.user?.name || 'Seller';
-  const isOwnProduct = product.userId === product.user?.id;
-
+  const sellerId = product.user?.id || product.userId;
+  
+  // Fix: Compare product's userId with current user's ID
+  const isOwnProduct = currentUserId && product.userId === currentUserId;
+  
+  
   return (
     <div className="min-h-screen py-8 bg-gradient-to-br from-blue-50 to-gray-100">
       <div className="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
@@ -230,7 +245,8 @@ export default function ProductByIdPage() {
 
               {/* Action Buttons */}
               <div className="space-y-3">
-                {!isOwnProduct && isLoggedIn && (
+                {/* Send Message Button - Fixed Logic */}
+                {isLoggedIn && !isOwnProduct && (
                   <button
                     onClick={() => setShowMessageModal(true)}
                     className="flex items-center justify-center w-full py-3 space-x-2 font-semibold text-white transition-colors bg-green-600 rounded-lg hover:bg-green-700"
@@ -370,11 +386,11 @@ export default function ProductByIdPage() {
         </div>
       </div>
 
-      {/* Message Modal */}
+      {/* Message Modal - Fixed to pass correct seller */}
       {showMessageModal && (
         <MessageModal
           product={product}
-          seller={product.user}
+          seller={product.user || { id: product.userId, name: sellerName }}
           onClose={() => setShowMessageModal(false)}
           onSend={handleMessageSent}
         />

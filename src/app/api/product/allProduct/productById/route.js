@@ -25,7 +25,15 @@ export async function GET(request) {
             email: true, 
             createdAt: true
           }
-        } 
+        } ,
+         category: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            icon: true
+          }
+        }
       }
     });
 

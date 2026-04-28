@@ -8,7 +8,7 @@ export default function MessageModal({ product, seller, onClose, onSend }) {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
 
-  console.log('MessageModal - seller:', seller); // Debug log
+   
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -19,7 +19,7 @@ export default function MessageModal({ product, seller, onClose, onSend }) {
     }
 
     if (!seller || !seller.id) {
-      setError('Seller information not available');
+      setError('Seller information not available. Please try again.');
       return;
     }
 
@@ -27,7 +27,7 @@ export default function MessageModal({ product, seller, onClose, onSend }) {
     setError('');
 
     try {
-      const response = await fetch('/api/messages', {
+      const response = await fetch('/api/message', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -91,7 +91,7 @@ export default function MessageModal({ product, seller, onClose, onSend }) {
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Hi, I'm interested in this product. Is it still available?"
               rows="5"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg resize-none text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
 
             {error && (
@@ -102,7 +102,7 @@ export default function MessageModal({ product, seller, onClose, onSend }) {
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 transition-colors border border-gray-300 rounded-lg hover:bg-gray-50"
+                className="px-4 py-2 transition-colors border border-gray-300 rounded-lg bg-amber-500 hover:bg-slate-500"
               >
                 Cancel
               </button>

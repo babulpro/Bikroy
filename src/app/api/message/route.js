@@ -26,6 +26,7 @@ export async function POST(request) {
     }
 
     const body = await request.json();
+    console.log('Received message body:', body);
     const { text, receiverId, productId } = body;
 
     if (!text || !receiverId || !productId) {
