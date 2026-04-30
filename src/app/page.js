@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import FeaturedProducts from '@/components/common/pagesComponent/HompageProduct';
 
 export default function HomePage() {
   const [categories, setCategories] = useState([]);
@@ -93,6 +94,24 @@ export default function HomePage() {
           )}
         </div>
       </section>
+
+
+
+
+
+
+
+
+
+
+
+      /* product section will be here */
+      <section>
+        <FeaturedProducts />
+      </section>
+
+
+
 
       {/* CTA Section */}
       <section className="py-16 text-white bg-gradient-to-r from-blue-600 to-blue-800">

@@ -367,7 +367,7 @@ function ProductCard({ product, getProductImage }) {
 // Product List Item Component (List View)
 function ProductListItem({ product, getProductImage }) {
   return (
-    <Link href={`/pages/product/${product.id}`} className="group">
+    <Link href={`/pages/product/productById/${product.id}`}  className="group">
       <div className="flex flex-col overflow-hidden transition-all duration-300 bg-white rounded-lg shadow-md hover:shadow-xl sm:flex-row">
         <div className="relative h-48 overflow-hidden sm:w-48">
           <img
