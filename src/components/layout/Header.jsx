@@ -203,14 +203,14 @@ export default function Header() {
                       
                       {/* Menu Items */}
                       <div className="py-2">
-                        <Link href="/profile" onClick={() => setIsDropdownOpen(false)} className="flex items-center px-4 py-2 text-gray-700 transition-colors hover:bg-blue-50 hover:text-blue-600">
+                        <Link href="/pages/user/profile" onClick={() => setIsDropdownOpen(false)} className="flex items-center px-4 py-2 text-gray-700 transition-colors hover:bg-blue-50 hover:text-blue-600">
                           <svg className="w-5 h-5 mr-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                           </svg>
                           My Profile
                         </Link>
                         
-                        <Link href="/pages/myProducts" onClick={() => setIsDropdownOpen(false)} className="flex items-center px-4 py-2 text-gray-700 transition-colors hover:bg-blue-50 hover:text-blue-600">
+                        <Link href="/pages/user/myProducts" onClick={() => setIsDropdownOpen(false)} className="flex items-center px-4 py-2 text-gray-700 transition-colors hover:bg-blue-50 hover:text-blue-600">
                           <svg className="w-5 h-5 mr-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                           </svg>
@@ -232,7 +232,7 @@ export default function Header() {
                           Favorites
                         </Link>
                         
-                        <Link href="/messages" onClick={() => setIsDropdownOpen(false)} className="flex items-center px-4 py-2 text-gray-700 transition-colors hover:bg-blue-50 hover:text-blue-600">
+                        <Link href="/pages/user/messages" onClick={() => setIsDropdownOpen(false)} className="flex items-center px-4 py-2 text-gray-700 transition-colors hover:bg-blue-50 hover:text-blue-600">
                           <svg className="w-5 h-5 mr-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                           </svg>
@@ -321,7 +321,7 @@ export default function Header() {
                   <Link href="/my-products" onClick={() => setIsMenuOpen(false)} className="block py-2.5 text-white hover:text-yellow-300">My Products</Link>
                   <Link href="/pages/user/address" onClick={() => setIsMenuOpen(false)} className="block py-2.5 text-white hover:text-yellow-300">My Address</Link>
                   <Link href="/favorites" onClick={() => setIsMenuOpen(false)} className="block py-2.5 text-white hover:text-yellow-300">Favorites</Link>
-                  <Link href="/messages" onClick={() => setIsMenuOpen(false)} className="block py-2.5 text-white hover:text-yellow-300">Messages</Link>
+                  <Link href="/pages/user/messages" onClick={() => setIsMenuOpen(false)} className="block py-2.5 text-white hover:text-yellow-300">Messages</Link>
                   <hr className="my-2 border-blue-500" />
                   <button
                     onClick={() => {

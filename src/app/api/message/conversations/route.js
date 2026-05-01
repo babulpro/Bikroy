@@ -1,10 +1,9 @@
-// src/app/api/messages/conversations/route.js
+// src/app/api/message/conversations/route.js
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { DecodedJwtToken } from '@/app/Utility/authFunction/JwtHelper';
 import prisma from '@/app/Utility/prisma/prisma';
 
-// GET - Get all conversations for the logged-in user
 export async function GET(request) {
   try {
     const cookieStore = await cookies();
@@ -38,16 +37,14 @@ export async function GET(request) {
           select: {
             id: true,
             name: true,
-            email: true,
-            profileImage: true
+            email: true
           }
         },
         receiver: {
           select: {
             id: true,
             name: true,
-            email: true,
-            profileImage: true
+            email: true
           }
         },
         product: {
@@ -64,10 +61,11 @@ export async function GET(request) {
       }
     });
 
-    // Group messages by conversation (unique combination of users and product)
+    // Group messages by conversation (unique combination of other user and product)
     const conversations = new Map();
 
     messages.forEach(message => {
+      // Determine the other person (not the current user)
       const otherUser = message.senderId === decoded.id ? message.receiver : message.sender;
       const conversationKey = `${otherUser.id}-${message.productId}`;
       
@@ -77,22 +75,20 @@ export async function GET(request) {
           product: message.product,
           lastMessage: message.text,
           lastMessageTime: message.createdAt,
-          unreadCount: message.receiverId === decoded.id && !message.read ? 1 : 0,
-          messages: [message]
+          lastMessageSender: message.senderId === decoded.id ? 'You' : otherUser.name
         });
       } else {
         const existing = conversations.get(conversationKey);
-        if (message.receiverId === decoded.id && !message.read) {
-          existing.unreadCount++;
-        }
-        existing.messages.push(message);
+        // Update if this message is newer
         if (message.createdAt > existing.lastMessageTime) {
           existing.lastMessage = message.text;
           existing.lastMessageTime = message.createdAt;
+          existing.lastMessageSender = message.senderId === decoded.id ? 'You' : otherUser.name;
         }
       }
     });
 
+    // Convert to array and sort by last message time
     const conversationList = Array.from(conversations.values()).sort((a, b) => 
       new Date(b.lastMessageTime) - new Date(a.lastMessageTime)
     );

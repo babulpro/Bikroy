@@ -8,8 +8,6 @@ export default function MessageModal({ product, seller, onClose, onSend }) {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
 
-   
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -32,6 +30,7 @@ export default function MessageModal({ product, seller, onClose, onSend }) {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({
           text: message,
           receiverId: seller.id,
@@ -102,7 +101,7 @@ export default function MessageModal({ product, seller, onClose, onSend }) {
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 transition-colors border border-gray-300 rounded-lg bg-amber-500 hover:bg-slate-500"
+                className="px-4 py-2 text-gray-700 transition-colors border border-gray-300 rounded-lg hover:bg-gray-50"
               >
                 Cancel
               </button>

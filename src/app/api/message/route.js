@@ -1,4 +1,4 @@
-// src/app/api/messages/route.js
+// src/app/api/message/route.js
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { DecodedJwtToken } from '@/app/Utility/authFunction/JwtHelper';
@@ -26,46 +26,24 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    console.log('Received message body:', body);
     const { text, receiverId, productId } = body;
 
     if (!text || !receiverId || !productId) {
       return NextResponse.json(
-        { error: 'Missing required fields: text, receiverId, productId' },
+        { error: 'Missing required fields' },
         { status: 400 }
       );
     }
 
     // Check if product exists
     const product = await prisma.product.findUnique({
-      where: { id: productId },
-      include: {
-        user: {
-          select: { id: true, name: true }
-        }
-      }
+      where: { id: productId }
     });
 
     if (!product) {
       return NextResponse.json(
         { error: 'Product not found' },
         { status: 404 }
-      );
-    }
-
-    // Check if receiver is the product owner
-    if (product.userId !== receiverId) {
-      return NextResponse.json(
-        { error: 'You can only message the product seller' },
-        { status: 400 }
-      );
-    }
-
-    // Don't allow sending message to yourself
-    if (decoded.id === receiverId) {
-      return NextResponse.json(
-        { error: 'You cannot send message to yourself' },
-        { status: 400 }
       );
     }
 
@@ -96,16 +74,23 @@ export async function POST(request) {
           select: {
             id: true,
             name: true,
-            image1: true
+            image1: true,
+            price: true
           }
         }
       }
     });
 
+    // Add isOwn flag
+    const messageWithFlag = {
+      ...message,
+      isOwn: message.senderId === decoded.id
+    };
+
     return NextResponse.json({
       success: true,
       message: 'Message sent successfully',
-      data: message
+      data: messageWithFlag
     }, { status: 201 });
 
   } catch (error) {
@@ -117,7 +102,7 @@ export async function POST(request) {
   }
 }
 
-// GET - Get all messages for the logged-in user
+// GET - Get all messages between two users for a specific product
 export async function GET(request) {
   try {
     const cookieStore = await cookies();
@@ -139,49 +124,36 @@ export async function GET(request) {
     }
 
     const { searchParams } = new URL(request.url);
-    const conversationWith = searchParams.get('userId');
+    const userId = searchParams.get('userId');
     const productId = searchParams.get('productId');
 
-    let filter = {
-      OR: [
-        { senderId: decoded.id },
-        { receiverId: decoded.id }
-      ]
-    };
-
-    if (conversationWith) {
-      filter = {
-        AND: [
-          filter,
-          {
-            OR: [
-              { senderId: conversationWith, receiverId: decoded.id },
-              { senderId: decoded.id, receiverId: conversationWith }
-            ]
-          }
-        ]
-      };
+    if (!userId || !productId) {
+      return NextResponse.json(
+        { error: 'userId and productId are required' },
+        { status: 400 }
+      );
     }
 
-    if (productId) {
-      filter.productId = productId;
-    }
-
+    // Get all messages between the two users for this product
     const messages = await prisma.message.findMany({
-      where: filter,
+      where: {
+        productId: productId,
+        OR: [
+          { senderId: decoded.id, receiverId: userId },
+          { senderId: userId, receiverId: decoded.id }
+        ]
+      },
       include: {
         sender: {
           select: {
             id: true,
-            name: true,
-            email: true
+            name: true
           }
         },
         receiver: {
           select: {
             id: true,
-            name: true,
-            email: true
+            name: true
           }
         },
         product: {
@@ -198,9 +170,15 @@ export async function GET(request) {
       }
     });
 
+    // Add isOwn flag to each message
+    const messagesWithFlag = messages.map(msg => ({
+      ...msg,
+      isOwn: msg.senderId === decoded.id
+    }));
+
     return NextResponse.json({
       success: true,
-      data: messages
+      data: messagesWithFlag
     });
 
   } catch (error) {
