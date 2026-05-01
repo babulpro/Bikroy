@@ -317,10 +317,10 @@ export default function Header() {
               isLoggedIn ? (
                 <>
                   <hr className="my-2 border-blue-500" />
-                  <Link href="/profile" onClick={() => setIsMenuOpen(false)} className="block py-2.5 text-white hover:text-yellow-300">My Profile</Link>
-                  <Link href="/my-products" onClick={() => setIsMenuOpen(false)} className="block py-2.5 text-white hover:text-yellow-300">My Products</Link>
+                  <Link href="/pages/user/profile" onClick={() => setIsMenuOpen(false)} className="block py-2.5 text-white hover:text-yellow-300">My Profile</Link>
+                  <Link href="/pages/user/myProducts" onClick={() => setIsMenuOpen(false)} className="block py-2.5 text-white hover:text-yellow-300">My Products</Link>
                   <Link href="/pages/user/address" onClick={() => setIsMenuOpen(false)} className="block py-2.5 text-white hover:text-yellow-300">My Address</Link>
-                  <Link href="/favorites" onClick={() => setIsMenuOpen(false)} className="block py-2.5 text-white hover:text-yellow-300">Favorites</Link>
+                  <Link href="/pages/user/favorites" onClick={() => setIsMenuOpen(false)} className="block py-2.5 text-white hover:text-yellow-300">Favorites</Link>
                   <Link href="/pages/user/messages" onClick={() => setIsMenuOpen(false)} className="block py-2.5 text-white hover:text-yellow-300">Messages</Link>
                   <hr className="my-2 border-blue-500" />
                   <button

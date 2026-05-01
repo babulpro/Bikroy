@@ -105,7 +105,7 @@ export default function HomePage() {
 
 
 
-      /* product section will be here */
+     
       <section>
         <FeaturedProducts />
       </section>
