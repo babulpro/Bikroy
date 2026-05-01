@@ -135,7 +135,7 @@ export default function Header() {
         <div className="flex items-center justify-between">
           {/* Logo with Image */}
           <Link href="/" className="flex items-center space-x-2 bg-blue-900 shrink-0">
-            <div className="relative w-40 h-16 ">
+            <div className="relative h-16 w-14 ">
               <Image
                 src="/sellkoro.png"
                 alt="SellKoro"
