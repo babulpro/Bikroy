@@ -149,7 +149,7 @@ export default function Header() {
           </Link>
 
           {/* Search Bar - Desktop */}
-          <div className="flex-1 hidden max-w-xl mx-8 md:flex">
+          {/* <div className="flex-1 hidden max-w-xl mx-8 md:flex">
             <div className="relative w-full">
               <input
                 type="text"
@@ -162,11 +162,11 @@ export default function Header() {
                 </svg>
               </button>
             </div>
-          </div>
+          </div> */}
 
           {/* Desktop Navigation */}
           <div className="items-center hidden space-x-4 lg:space-x-6 md:flex">
-            {navLinks.map((link) => (
+            {/* {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
@@ -176,7 +176,7 @@ export default function Header() {
               >
                 {link.label}
               </Link>
-            ))}
+            ))} */}
 
             {!loading && (
               isLoggedIn ? (
@@ -292,7 +292,7 @@ export default function Header() {
         </div>
 
         {/* Mobile Search */}
-        <div className="mt-3 md:hidden">
+        {/* <div className="mt-3 md:hidden">
           <div className="relative w-full">
             <input
               type="text"
@@ -305,12 +305,12 @@ export default function Header() {
               </svg>
             </button>
           </div>
-        </div>
+        </div> */}
 
         {/* Mobile Menu */}
         {isMenuOpen && (
-          <div ref={mobileMenuRef} className="md:hidden mt-4 py-4 border-t border-blue-500 max-h-[calc(100vh-100px)] overflow-y-auto">
-            {navLinks.map((link) => (
+          <div ref={mobileMenuRef} className="md:hidden mt-4 py-4   border-blue-500 max-h-[calc(100vh-100px)] overflow-y-auto">
+            {/* {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
@@ -322,7 +322,7 @@ export default function Header() {
                 {link.label}
               </Link>
             ))}
-            
+             */}
             {!loading && (
               isLoggedIn ? (
                 <>

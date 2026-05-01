@@ -87,7 +87,7 @@ export default function CategoriesPage() {
           <div className="mb-12">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-gray-800">Popular Categories</h2>
-              <Link href="/pages/product/products" className="text-sm font-medium text-blue-600 hover:text-blue-700">
+              <Link href="/pages/product/allProducts" className="text-sm font-medium text-blue-600 hover:text-blue-700">
                 View All Products →
               </Link>
             </div>

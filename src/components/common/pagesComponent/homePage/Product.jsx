@@ -61,29 +61,31 @@ export default function FeaturedProducts({ limit = 8, title = "Featured Products
   }
 
   return (
-    <div className='container m-auto'>
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-800 sm:text-3xl">{title}</h2>
-          <p className="mt-1 text-gray-600">{subtitle}</p>
-        </div>
-        <Link 
-          href="/pages/product/allProducts" 
-          className="flex items-center gap-1 font-medium text-blue-600 transition-colors hover:text-blue-700"
-        >
-          View All
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-        </Link>
-      </div>
+    <section className="py-16 bg-gray-50">
+      <div className='px-4 mx-auto max-w-7xl sm:px-6 lg:px-8'>
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800 sm:text-3xl">{title}</h2>
+              <p className="mt-1 text-gray-600">{subtitle}</p>
+            </div>
+            <Link 
+              href="/pages/product/allProducts" 
+              className="flex items-center gap-1 font-medium text-blue-600 transition-colors hover:text-blue-700"
+            >
+              View All
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+          </div>
 
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {products.map((product) => (
-          <ProductCard key={product.id} product={product} getProductImage={getProductImage} />
-        ))}
-      </div>
-    </div>
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {products.map((product) => (
+              <ProductCard key={product.id} product={product} getProductImage={getProductImage} />
+            ))}
+          </div>
+        </div>
+    </section>
   );
 }
 
