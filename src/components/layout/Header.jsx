@@ -4,6 +4,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -132,10 +133,19 @@ export default function Header() {
     }`}>
       <nav className="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">
-          {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2 shrink-0">
-            <span className="text-xl font-bold text-white md:text-2xl">Bikroy</span>
-            <span className="hidden text-xs text-blue-100 sm:inline">.com</span>
+          {/* Logo with Image */}
+          <Link href="/" className="flex items-center space-x-2 bg-blue-900 shrink-0">
+            <div className="relative w-40 h-16 ">
+              <Image
+                src="/sellkoro.png"
+                alt="SellKoro"
+                fill
+                priority
+                sizes="160px"
+                className='object-contain'
+                 
+              />
+            </div>
           </Link>
 
           {/* Search Bar - Desktop */}
