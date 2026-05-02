@@ -13,6 +13,7 @@ export default function MessagesPage() {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [sending, setSending] = useState(false);
+  const [showConversations, setShowConversations] = useState(true);
   const messagesContainerRef = useRef(null);
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
 
@@ -55,7 +56,6 @@ export default function MessagesPage() {
       
       if (data.success) {
         setMessages(data.data);
-        // Auto-scroll to bottom after loading messages
         setShouldAutoScroll(true);
         setTimeout(() => {
           if (messagesContainerRef.current) {
@@ -71,6 +71,12 @@ export default function MessagesPage() {
   const handleConversationClick = (conversation) => {
     setSelectedConversation(conversation);
     fetchMessages(conversation.user.id, conversation.product.id);
+    setShowConversations(false);
+  };
+
+  const handleBackToList = () => {
+    setShowConversations(true);
+    setSelectedConversation(null);
   };
 
   const handleSendMessage = async (e) => {
@@ -78,7 +84,7 @@ export default function MessagesPage() {
     if (!newMessage.trim()) return;
 
     setSending(true);
-    setShouldAutoScroll(true); // Enable auto-scroll for new message
+    setShouldAutoScroll(true);
     
     try {
       const response = await fetch('/api/message', {
@@ -100,7 +106,6 @@ export default function MessagesPage() {
         setNewMessage('');
         setMessages(prev => [...prev, data.data]);
         
-        // Update conversation last message
         setConversations(prev => prev.map(conv => 
           conv.user.id === selectedConversation.user.id && conv.product.id === selectedConversation.product.id
             ? { 
@@ -122,7 +127,6 @@ export default function MessagesPage() {
     }
   };
 
-  // Handle scroll to detect if user scrolled up manually
   const handleScroll = (e) => {
     const { scrollTop, scrollHeight, clientHeight } = e.target;
     const isAtBottom = scrollHeight - scrollTop <= clientHeight + 50;
@@ -165,15 +169,16 @@ export default function MessagesPage() {
   }
 
   return (
-    <div className="min-h-screen py-12 bg-gradient-to-br from-blue-50 to-gray-100">
-      <div className="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">Messages</h1>
-          <p className="mt-2 text-gray-600">Chat with buyers and sellers</p>
+    <div className="min-h-screen py-6 sm:py-12 bg-gradient-to-br from-blue-50 to-gray-100">
+      <div className="px-3 mx-auto max-w-7xl sm:px-6 lg:px-8">
+        <div className="mb-4 sm:mb-8">
+          <h1 className="text-2xl font-bold text-gray-800 sm:text-3xl">Messages</h1>
+          <p className="mt-1 text-sm text-gray-600 sm:mt-2">Chat with buyers and sellers</p>
         </div>
 
         <div className="overflow-hidden bg-white rounded-lg shadow-xl">
-          <div className="grid grid-cols-1 md:grid-cols-3 h-[650px]">
+          {/* Desktop View - Split Screen */}
+          <div className="hidden md:grid md:grid-cols-3 h-[650px]">
             {/* Conversations List */}
             <div className="overflow-y-auto border-r border-gray-200">
               <div className="sticky top-0 p-4 border-b border-gray-200 bg-gray-50">
@@ -234,7 +239,6 @@ export default function MessagesPage() {
             <div className="md:col-span-2 flex flex-col h-[650px]">
               {selectedConversation ? (
                 <>
-                  {/* Chat Header - Fixed at top */}
                   <div className="sticky top-0 z-10 p-4 border-b border-gray-200 bg-gray-50">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
@@ -261,7 +265,6 @@ export default function MessagesPage() {
                     </div>
                   </div>
 
-                  {/* Messages Container - Scrollable middle section */}
                   <div 
                     ref={messagesContainerRef}
                     onScroll={handleScroll}
@@ -275,64 +278,60 @@ export default function MessagesPage() {
                         </div>
                       </div>
                     ) : (
-                      <>
-                        {messages.map((msg, index) => (
+                      messages.map((msg, index) => (
+                        <div
+                          key={index}
+                          className={`flex ${msg.isOwn ? 'justify-end' : 'justify-start'}`}
+                        >
                           <div
-                            key={index}
-                            className={`flex ${msg.isOwn ? 'justify-end' : 'justify-start'}`}
+                            className={`max-w-[85%] sm:max-w-[70%] rounded-lg p-3 ${
+                              msg.isOwn
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-gray-100 text-gray-800'
+                            }`}
                           >
-                            <div
-                              className={`max-w-[70%] rounded-lg p-3 ${
-                                msg.isOwn
-                                  ? 'bg-blue-600 text-white'
-                                  : 'bg-gray-100 text-gray-800'
-                              }`}
-                            >
-                              {!msg.isOwn && (
-                                <p className="mb-1 text-xs font-semibold text-blue-600">
-                                  {msg.sender?.name}
-                                </p>
-                              )}
-                              <p className="text-sm break-words">{msg.text}</p>
-                              <p className={`text-xs mt-1 ${
-                                msg.isOwn ? 'text-blue-200' : 'text-gray-400'
-                              }`}>
-                                {formatMessageTime(msg.createdAt)}
+                            {!msg.isOwn && (
+                              <p className="mb-1 text-xs font-semibold text-blue-600">
+                                {msg.sender?.name}
                               </p>
-                            </div>
+                            )}
+                            <p className="text-sm break-words">{msg.text}</p>
+                            <p className={`text-xs mt-1 ${
+                              msg.isOwn ? 'text-blue-200' : 'text-gray-400'
+                            }`}>
+                              {formatMessageTime(msg.createdAt)}
+                            </p>
                           </div>
-                        ))}
-                      </>
+                        </div>
+                      ))
                     )}
                   </div>
 
-                  {/* Message Input - Fixed at bottom */}
-                  <div className="sticky bottom-0 p-4 bg-white border-t border-gray-200">
+                  <div className="sticky bottom-0 p-3 bg-white border-t border-gray-200 sm:p-4">
                     <form onSubmit={handleSendMessage}>
-                      <div className="flex py-10 space-x-2">
+                      <div className="flex space-x-2">
                         <input
                           type="text"
                           value={newMessage}
                           onChange={(e) => setNewMessage(e.target.value)}
                           placeholder="Type your message..."
-                          className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 sm:px-4 sm:py-2"
                         />
                         <button
                           type="submit"
                           disabled={sending || !newMessage.trim()}
-                          className="flex items-center px-4 py-2 space-x-2 font-semibold text-white transition-colors bg-blue-600 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                          className="px-3 py-2 text-sm font-semibold text-white transition-colors bg-blue-600 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed sm:px-4 sm:py-2"
                         >
                           {sending ? (
-                            <svg className="w-5 h-5 animate-spin" viewBox="0 0 24 24">
+                            <svg className="w-4 h-4 animate-spin sm:w-5 sm:h-5" viewBox="0 0 24 24">
                               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                             </svg>
                           ) : (
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                             </svg>
                           )}
-                          <span>Send</span>
                         </button>
                       </div>
                     </form>
@@ -347,6 +346,172 @@ export default function MessagesPage() {
                 </div>
               )}
             </div>
+          </div>
+
+          {/* Mobile View */}
+          <div className="md:hidden">
+            {showConversations ? (
+              // Conversations List for Mobile
+              <div className="h-[600px] overflow-y-auto">
+                <div className="sticky top-0 p-4 bg-white border-b border-gray-200">
+                  <h2 className="text-lg font-semibold text-gray-800">Conversations</h2>
+                  <p className="text-xs text-gray-500">{conversations.length} chats</p>
+                </div>
+                
+                {conversations.length === 0 ? (
+                  <div className="p-8 text-center">
+                    <div className="mb-2 text-5xl">💬</div>
+                    <p className="text-gray-500">No messages yet</p>
+                    <Link href="/pages/product/all-products" className="inline-block mt-4 text-blue-600 hover:underline">
+                      Start shopping →
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-gray-100">
+                    {conversations.map((conv, index) => (
+                      <button
+                        key={index}
+                        onClick={() => handleConversationClick(conv)}
+                        className="w-full p-4 text-left transition-colors hover:bg-blue-50"
+                      >
+                        <div className="flex items-start space-x-3">
+                          <div className="flex items-center justify-center flex-shrink-0 w-12 h-12 bg-blue-100 rounded-full">
+                            <span className="text-lg font-semibold text-blue-600">
+                              {conv.user.name?.charAt(0)?.toUpperCase() || 'U'}
+                            </span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-baseline justify-between">
+                              <p className="font-semibold text-gray-800">
+                                {conv.user.name}
+                              </p>
+                              <p className="ml-2 text-xs text-gray-400">
+                                {formatDate(conv.lastMessageTime)}
+                              </p>
+                            </div>
+                            <p className="text-sm text-gray-500 truncate">
+                              {conv.lastMessageSender}: {conv.lastMessage}
+                            </p>
+                            <p className="mt-1 text-xs text-gray-400 truncate">
+                              📦 {conv.product.name}
+                            </p>
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              // Chat Area for Mobile
+              <div className="flex flex-col h-[600px]">
+                {/* Chat Header */}
+                <div className="sticky top-0 z-10 p-3 bg-white border-b border-gray-200">
+                  <div className="flex items-center space-x-3">
+                    <button
+                      onClick={handleBackToList}
+                      className="p-1 text-gray-600 hover:text-blue-600"
+                    >
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                      </svg>
+                    </button>
+                    <div className="flex items-center flex-1 space-x-2">
+                      <div className="flex items-center justify-center w-10 h-10 bg-blue-100 rounded-full">
+                        <span className="font-semibold text-blue-600">
+                          {selectedConversation?.user.name?.charAt(0)?.toUpperCase() || 'U'}
+                        </span>
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-semibold text-gray-800">
+                          {selectedConversation?.user.name}
+                        </p>
+                        <Link 
+                          href={`/pages/product/productById/${selectedConversation?.product.id}`}
+                          className="text-xs text-blue-600 hover:underline"
+                        >
+                          {selectedConversation?.product.name}
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Messages */}
+                <div 
+                  ref={messagesContainerRef}
+                  onScroll={handleScroll}
+                  className="flex-1 p-3 space-y-3 overflow-y-auto bg-gray-50"
+                >
+                  {messages.length === 0 ? (
+                    <div className="flex items-center justify-center h-full">
+                      <div className="text-center">
+                        <div className="mb-2 text-4xl">💬</div>
+                        <p className="text-sm text-gray-500">No messages yet. Start the conversation!</p>
+                      </div>
+                    </div>
+                  ) : (
+                    messages.map((msg, index) => (
+                      <div
+                        key={index}
+                        className={`flex ${msg.isOwn ? 'justify-end' : 'justify-start'}`}
+                      >
+                        <div
+                          className={`max-w-[85%] rounded-lg p-3 ${
+                            msg.isOwn
+                              ? 'bg-blue-600 text-white'
+                              : 'bg-white text-gray-800 shadow-sm'
+                          }`}
+                        >
+                          {!msg.isOwn && (
+                            <p className="mb-1 text-xs font-semibold text-blue-600">
+                              {msg.sender?.name}
+                            </p>
+                          )}
+                          <p className="text-sm break-words">{msg.text}</p>
+                          <p className={`text-xs mt-1 ${
+                            msg.isOwn ? 'text-blue-200' : 'text-gray-400'
+                          }`}>
+                            {formatMessageTime(msg.createdAt)}
+                          </p>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                {/* Message Input */}
+                <div className="sticky bottom-0 p-3 bg-white border-t border-gray-200">
+                  <form onSubmit={handleSendMessage}>
+                    <div className="flex space-x-2">
+                      <input
+                        type="text"
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                        placeholder="Type your message..."
+                        className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                      <button
+                        type="submit"
+                        disabled={sending || !newMessage.trim()}
+                        className="px-3 py-2 text-sm font-semibold text-white transition-colors bg-blue-600 rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
+                      >
+                        {sending ? (
+                          <svg className="w-5 h-5 animate-spin" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                          </svg>
+                        ) : (
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                          </svg>
+                        )}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

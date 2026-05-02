@@ -21,31 +21,31 @@ export default function Footer() {
         { href: '/pages/sellKoro/press', label: 'Press' },
       ],
     },
-    {
+    { 
       title: 'Support',
       links: [
-        { href: '/help', label: 'Help Center' },
-        { href: '/safety', label: 'Safety Tips' },
-        { href: '/report', label: 'Report an Issue' },
-        { href: '/terms', label: 'Terms of Service' },
+        { href: '/pages/sellKoro/help', label: 'Help Center' },
+        { href: '/pages/sellKoro/safety-tips', label: 'Safety Tips' },
+        { href: '/pages/sellKoro/report', label: 'Report an Issue' },
+        { href: '/pages/sellKoro/terms', label: 'Terms of Service' },
       ],
     },
     {
       title: 'Sell & Buy',
       links: [
-        { href: '/how-to-sell', label: 'How to Sell' },
-        { href: '/how-to-buy', label: 'How to Buy' },
-        { href: '/payment', label: 'Payment Methods' },
-        { href: '/shipping', label: 'Shipping Info' },
+        { href: '/pages/sellKoro/sell', label: 'How to Sell' },
+        { href: '/pages/sellKoro/buy', label: 'How to Buy' },
+        { href: '/pages/sellKoro/payment', label: 'Payment Methods' },
+        { href: '/pages/sellKoro/shipping', label: 'Shipping Info' },
       ],
     },
     {
       title: 'Follow Us',
       links: [
-        { href: 'https://facebook.com', label: 'Facebook', external: true },
-        { href: 'https://twitter.com', label: 'Twitter', external: true },
-        { href: 'https://instagram.com', label: 'Instagram', external: true },
-        { href: 'https://linkedin.com', label: 'LinkedIn', external: true },
+        { href: '/pages/sellKoro/facebook', label: 'Facebook', external: true },
+        { href: '/pages/sellKoro/twitter', label: 'Twitter', external: true },
+        { href: '/pages/sellKoro/instagram', label: 'Instagram', external: true },
+        { href: '/pages/sellKoro/linkedin', label: 'LinkedIn', external: true },
       ],
     },
   ];

@@ -5,10 +5,50 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import ImageUpload from '@/components/ImageUpload';
 
+// Bangladesh Location Data
+const BANGLADESH_DIVISIONS = [
+  { id: "dhaka", name: "Dhaka" },
+  { id: "chittagong", name: "Chittagong" },
+  { id: "rajshahi", name: "Rajshahi" },
+  { id: "khulna", name: "Khulna" },
+  { id: "barisal", name: "Barisal" },
+  { id: "sylhet", name: "Sylhet" },
+  { id: "rangpur", name: "Rangpur" },
+  { id: "mymensingh", name: "Mymensingh" }
+];
+
+const BANGLADESH_DISTRICTS = {
+  dhaka: ["Dhaka", "Gazipur", "Narayanganj", "Tangail", "Kishoreganj", "Manikganj", "Munshiganj", "Narsingdi", "Faridpur", "Rajbari", "Shariatpur", "Madaripur", "Gopalganj"],
+  chittagong: ["Chittagong", "Cox's Bazar", "Comilla", "Brahmanbaria", "Rangamati", "Khagrachari", "Bandarban", "Feni", "Lakshmipur", "Noakhali", "Chandpur"],
+  rajshahi: ["Rajshahi", "Bogra", "Chapainawabganj", "Naogaon", "Natore", "Pabna", "Sirajganj", "Joypurhat"],
+  khulna: ["Khulna", "Jessore", "Kushtia", "Chuadanga", "Jhenaidah", "Magura", "Narail", "Bagerhat", "Satkhira"],
+  barisal: ["Barisal", "Barguna", "Patuakhali", "Bhola", "Jhalokati", "Pirojpur"],
+  sylhet: ["Sylhet", "Moulvibazar", "Habiganj", "Sunamganj"],
+  rangpur: ["Rangpur", "Dinajpur", "Gaibandha", "Kurigram", "Lalmonirhat", "Nilphamari", "Panchagarh", "Thakurgaon"],
+  mymensingh: ["Mymensingh", "Jamalpur", "Netrokona", "Sherpur"]
+};
+
+const BANGLADESH_THANAS = {
+  "Dhaka": ["Gulshan", "Banani", "Uttara", "Dhanmondi", "Mohammadpur", "Mirpur", "Motijheel", "Paltan", "Ramna", "Shahbag", "Tejgaon", "Khilgaon", "Sabujbagh", "Kafrul", "Cantonment", "Badda", "Rampura", "Malibagh", "Shantinagar", "Jatrabari", "Demra", "Keraniganj", "Nawabganj", "Savar", "Dhamrai"],
+  "Gazipur": ["Gazipur Sadar", "Tongi", "Kaliakoir", "Kaliganj", "Kapasia", "Sreepur"],
+  "Narayanganj": ["Narayanganj Sadar", "Bandar", "Rupganj", "Sonargaon", "Araihazar"],
+  "Chittagong": ["Chittagong Sadar", "Panchlaish", "Double Mooring", "Kotwali", "Pahartali", "Halishahar", "Baizid Bostami", "Khulshi", "Akbarshah", "Bakalia", "Bayazid", "Chandgaon", "EPZ"],
+  "Cox's Bazar": ["Cox's Bazar Sadar", "Ramu", "Ukhia", "Teknaf", "Chakaria", "Pekua", "Kutubdia", "Maheshkhali"],
+  "Rajshahi": ["Rajshahi Sadar", "Boalia", "Motihar", "Shah Makhdum", "Paba", "Godagari"],
+  "Khulna": ["Khulna Sadar", "Sonadanga", "Khalishpur", "Daulatpur", "Khan Jahan Ali", "Harintana", "Dighalia", "Rupsha"],
+  "Barisal": ["Barisal Sadar", "Kawnia", "Bandar", "Gournadi", "Agailjhara", "Babuganj"],
+  "Sylhet": ["Sylhet Sadar", "Mogla Bazar", "Shah Poran", "Jalalabad", "South Surma", "Dakshin Surma"],
+  "Rangpur": ["Rangpur Sadar", "Badarganj", "Gangachara", "Kaunia", "Mithapukur", "Pirganj", "Taraganj"],
+  "Mymensingh": ["Mymensingh Sadar", "Kotwali", "Ganginarpar", "Trishal", "Muktagacha"]
+};
+
 export default function UploadPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState([]);
+  const [districts, setDistricts] = useState([]);
+  const [thanas, setThanas] = useState([]);
+  
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -19,6 +59,9 @@ export default function UploadPage() {
     contactEmail: '',
     type: '',
     categoryId: '',
+    division: '',
+    district: '',
+    thana: '',
     image1: '',
     image2: '',
     image3: '',
@@ -27,6 +70,7 @@ export default function UploadPage() {
     isFeatured: false,
     isBoosted: false
   });
+  
   const [errors, setErrors] = useState({});
 
   // Fetch categories on load
@@ -52,10 +96,20 @@ export default function UploadPage() {
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
-    // Clear error for this field
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
+  };
+
+  const handleDivisionChange = (division) => {
+    setFormData(prev => ({ ...prev, division, district: '', thana: '' }));
+    setDistricts(BANGLADESH_DISTRICTS[division] || []);
+    setThanas([]);
+  };
+
+  const handleDistrictChange = (district) => {
+    setFormData(prev => ({ ...prev, district, thana: '' }));
+    setThanas(BANGLADESH_THANAS[district] || []);
   };
 
   const handleImageUpload = (imageField, imageUrl) => {
@@ -68,25 +122,15 @@ export default function UploadPage() {
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.name.trim()) {
-      newErrors.name = 'Product name is required';
-    }
-    if (!formData.description.trim()) {
-      newErrors.description = 'Description is required';
-    } else if (formData.description.length < 20) {
-      newErrors.description = 'Description must be at least 20 characters';
-    }
-    if (!formData.price) {
-      newErrors.price = 'Price is required';
-    } else if (isNaN(formData.price) || formData.price <= 0) {
-      newErrors.price = 'Price must be a valid positive number';
-    }
-    if (!formData.contactPhone) {
-      newErrors.contactPhone = 'Contact phone is required';
-    }
-    if (!formData.categoryId) {
-      newErrors.categoryId = 'Please select a category';
-    }
+    if (!formData.name.trim()) newErrors.name = 'Product name is required';
+    if (!formData.description.trim()) newErrors.description = 'Description is required';
+    else if (formData.description.length < 20) newErrors.description = 'Description must be at least 20 characters';
+    if (!formData.price) newErrors.price = 'Price is required';
+    else if (isNaN(formData.price) || formData.price <= 0) newErrors.price = 'Price must be a valid positive number';
+    if (!formData.contactPhone) newErrors.contactPhone = 'Contact phone is required';
+    if (!formData.categoryId) newErrors.categoryId = 'Please select a category';
+    if (!formData.division) newErrors.division = 'Please select a division';
+    if (!formData.district) newErrors.district = 'Please select a district';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -116,7 +160,6 @@ export default function UploadPage() {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        // router.push(`/pages/product/${data.data.id}?success=true`);
         router.push(`/`);
       } else {
         alert(data.error || 'Failed to create product');
@@ -154,7 +197,6 @@ export default function UploadPage() {
               <h2 className="text-xl font-bold text-white">Basic Information</h2>
             </div>
             <div className="p-6 space-y-5">
-              {/* Product Name */}
               <div>
                 <label className="block mb-1 text-sm font-medium text-gray-700">
                   Product Name <span className="text-red-500">*</span>
@@ -172,7 +214,6 @@ export default function UploadPage() {
                 {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
               </div>
 
-              {/* Category & Type */}
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div>
                   <label className="block mb-1 text-sm font-medium text-gray-700">
@@ -209,7 +250,6 @@ export default function UploadPage() {
                 </div>
               </div>
 
-              {/* Description */}
               <div>
                 <label className="block mb-1 text-sm font-medium text-gray-700">
                   Description <span className="text-red-500">*</span>
@@ -225,9 +265,80 @@ export default function UploadPage() {
                   }`}
                 />
                 {errors.description && <p className="mt-1 text-sm text-red-500">{errors.description}</p>}
-                <p className="mt-1 text-xs text-gray-500">
-                  {formData.description.length}/5000 characters
-                </p>
+                <p className="mt-1 text-xs text-gray-500">{formData.description.length}/5000 characters</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Location Information */}
+          <div className="overflow-hidden bg-white rounded-lg shadow-lg">
+            <div className="px-6 py-4 bg-blue-600">
+              <h2 className="text-xl font-bold text-white">Location Information</h2>
+              <p className="mt-1 text-sm text-blue-100">Help buyers find your product in their area</p>
+            </div>
+            <div className="p-6 space-y-5">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                {/* Division */}
+                <div>
+                  <label className="block mb-1 text-sm font-medium text-gray-700">
+                    Division <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    name="division"
+                    value={formData.division}
+                    onChange={(e) => handleDivisionChange(e.target.value)}
+                    className={`w-full px-4 text-slate-700 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                      errors.division ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                  >
+                    <option value="">Select Division</option>
+                    {BANGLADESH_DIVISIONS.map(div => (
+                      <option key={div.id} value={div.id}>{div.name}</option>
+                    ))}
+                  </select>
+                  {errors.division && <p className="mt-1 text-sm text-red-500">{errors.division}</p>}
+                </div>
+
+                {/* District */}
+                <div>
+                  <label className="block mb-1 text-sm font-medium text-gray-700">
+                    District <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    name="district"
+                    value={formData.district}
+                    onChange={(e) => handleDistrictChange(e.target.value)}
+                    disabled={!formData.division}
+                    className={`w-full px-4 text-slate-700 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 ${
+                      errors.district ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                  >
+                    <option value="">Select District</option>
+                    {districts.map(district => (
+                      <option key={district} value={district}>{district}</option>
+                    ))}
+                  </select>
+                  {errors.district && <p className="mt-1 text-sm text-red-500">{errors.district}</p>}
+                </div>
+
+                {/* Thana / Area */}
+                <div>
+                  <label className="block mb-1 text-sm font-medium text-gray-700">
+                    Thana / Area <span className="text-xs text-gray-400">(Optional)</span>
+                  </label>
+                  <select
+                    name="thana"
+                    value={formData.thana}
+                    onChange={handleInputChange}
+                    disabled={!formData.district}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+                  >
+                    <option value="">Select Thana</option>
+                    {thanas.map(thana => (
+                      <option key={thana} value={thana}>{thana}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
           </div>
@@ -343,7 +454,7 @@ export default function UploadPage() {
                     value={formData.contactEmail}
                     onChange={handleInputChange}
                     placeholder="contact@example.com"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
               </div>
@@ -385,7 +496,7 @@ export default function UploadPage() {
             <button
               type="button"
               onClick={() => router.back()}
-              className="px-6 py-2 transition-colors border border-gray-300 rounded-lg hover:bg-gray-50"
+              className="px-6 py-2 transition-colors border border-gray-300 rounded-lg bg-amber-400 hover:bg-amber-500"
             >
               Cancel
             </button>

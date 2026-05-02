@@ -14,6 +14,11 @@ export async function GET(request) {
     const search = searchParams.get('search');
     const sortBy = searchParams.get('sortBy') || 'newest';
     
+    // Location filters
+    const division = searchParams.get('division');
+    const district = searchParams.get('district');
+    const thana = searchParams.get('thana');
+    
     const skip = (page - 1) * limit;
 
     // Build filter
@@ -25,6 +30,19 @@ export async function GET(request) {
     
     if (condition) {
       filter.condition = condition;
+    }
+    
+    // Add location filters
+    if (division && division !== '') {
+      filter.division = division;
+    }
+    
+    if (district && district !== '') {
+      filter.district = district;
+    }
+    
+    if (thana && thana !== '') {
+      filter.thana = thana;
     }
     
     if (search) {
@@ -70,6 +88,13 @@ export async function GET(request) {
       prisma.product.findMany({
         where: filter,
         include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true
+            }
+          },
           category: {
             select: {
               id: true,
@@ -85,6 +110,8 @@ export async function GET(request) {
       prisma.product.count({ where: filter })
     ]);
 
+    console.log('Filter applied:', { division, district, thana, total });
+
     return NextResponse.json({
       status: 'success',
       products: products,
@@ -94,6 +121,11 @@ export async function GET(request) {
         total,
         totalPages: Math.ceil(total / limit),
         hasMore: skip + products.length < total
+      },
+      appliedFilters: {
+        division: division || null,
+        district: district || null,
+        thana: thana || null
       }
     });
 

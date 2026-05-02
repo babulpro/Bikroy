@@ -5,6 +5,43 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 
+// Bangladesh Location Data
+const BANGLADESH_DIVISIONS = [
+  { id: "dhaka", name: "Dhaka" },
+  { id: "chittagong", name: "Chittagong" },
+  { id: "rajshahi", name: "Rajshahi" },
+  { id: "khulna", name: "Khulna" },
+  { id: "barisal", name: "Barisal" },
+  { id: "sylhet", name: "Sylhet" },
+  { id: "rangpur", name: "Rangpur" },
+  { id: "mymensingh", name: "Mymensingh" }
+];
+
+const BANGLADESH_DISTRICTS = {
+  dhaka: ["Dhaka", "Gazipur", "Narayanganj", "Tangail", "Kishoreganj", "Manikganj", "Munshiganj", "Narsingdi", "Faridpur", "Rajbari", "Shariatpur", "Madaripur", "Gopalganj"],
+  chittagong: ["Chittagong", "Cox's Bazar", "Comilla", "Brahmanbaria", "Rangamati", "Khagrachari", "Bandarban", "Feni", "Lakshmipur", "Noakhali", "Chandpur"],
+  rajshahi: ["Rajshahi", "Bogra", "Chapainawabganj", "Naogaon", "Natore", "Pabna", "Sirajganj", "Joypurhat"],
+  khulna: ["Khulna", "Jessore", "Kushtia", "Chuadanga", "Jhenaidah", "Magura", "Narail", "Bagerhat", "Satkhira"],
+  barisal: ["Barisal", "Barguna", "Patuakhali", "Bhola", "Jhalokati", "Pirojpur"],
+  sylhet: ["Sylhet", "Moulvibazar", "Habiganj", "Sunamganj"],
+  rangpur: ["Rangpur", "Dinajpur", "Gaibandha", "Kurigram", "Lalmonirhat", "Nilphamari", "Panchagarh", "Thakurgaon"],
+  mymensingh: ["Mymensingh", "Jamalpur", "Netrokona", "Sherpur"]
+};
+
+const BANGLADESH_THANAS = {
+  "Dhaka": ["Gulshan", "Banani", "Uttara", "Dhanmondi", "Mohammadpur", "Mirpur", "Motijheel", "Paltan", "Ramna", "Shahbag", "Tejgaon", "Khilgaon", "Sabujbagh", "Kafrul", "Cantonment", "Badda", "Rampura"],
+  "Gazipur": ["Gazipur Sadar", "Tongi", "Kaliakoir", "Kaliganj", "Kapasia", "Sreepur"],
+  "Narayanganj": ["Narayanganj Sadar", "Bandar", "Rupganj", "Sonargaon", "Araihazar"],
+  "Chittagong": ["Chittagong Sadar", "Panchlaish", "Double Mooring", "Kotwali", "Pahartali", "Halishahar", "Baizid Bostami", "Khulshi"],
+  "Cox's Bazar": ["Cox's Bazar Sadar", "Ramu", "Ukhia", "Teknaf", "Chakaria", "Pekua"],
+  "Rajshahi": ["Rajshahi Sadar", "Boalia", "Motihar", "Shah Makhdum", "Paba", "Godagari"],
+  "Khulna": ["Khulna Sadar", "Sonadanga", "Khalishpur", "Daulatpur", "Khan Jahan Ali", "Harintana"],
+  "Barisal": ["Barisal Sadar", "Kawnia", "Bandar", "Gournadi", "Agailjhara"],
+  "Sylhet": ["Sylhet Sadar", "Mogla Bazar", "Shah Poran", "Jalalabad", "South Surma"],
+  "Rangpur": ["Rangpur Sadar", "Badarganj", "Gangachara", "Kaunia", "Mithapukur"],
+  "Mymensingh": ["Mymensingh Sadar", "Kotwali", "Ganginarpar", "Trishal", "Muktagacha"]
+};
+
 export default function CategoryProductsPage() {
   const params = useParams();
   const { id } = params;
@@ -13,6 +50,7 @@ export default function CategoryProductsPage() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filteredProducts, setFilteredProducts] = useState([]);
+  const [showFilters, setShowFilters] = useState(false);
   
   // Filter states
   const [priceRange, setPriceRange] = useState({ min: '', max: '' });
@@ -20,6 +58,13 @@ export default function CategoryProductsPage() {
   const [selectedType, setSelectedType] = useState('');
   const [sortBy, setSortBy] = useState('newest');
   const [viewMode, setViewMode] = useState('grid');
+  
+  // Location filters
+  const [division, setDivision] = useState('');
+  const [district, setDistrict] = useState('');
+  const [thana, setThana] = useState('');
+  const [districts, setDistricts] = useState([]);
+  const [thanas, setThanas] = useState([]);
 
   // Fetch category and products
   useEffect(() => {
@@ -28,28 +73,48 @@ export default function CategoryProductsPage() {
     }
   }, [id]);
 
+  // Update districts when division changes
+  useEffect(() => {
+    if (division) {
+      setDistricts(BANGLADESH_DISTRICTS[division] || []);
+      setDistrict('');
+      setThana('');
+      setThanas([]);
+    } else {
+      setDistricts([]);
+      setThanas([]);
+    }
+  }, [division]);
+
+  // Update thanas when district changes
+  useEffect(() => {
+    if (district) {
+      setThanas(BANGLADESH_THANAS[district] || []);
+      setThana('');
+    } else {
+      setThanas([]);
+    }
+  }, [district]);
+
   // Apply filters and sorting
   useEffect(() => {
     if (products.length > 0) {
       applyFiltersAndSort();
     }
-  }, [products, priceRange, selectedCondition, selectedType, sortBy]);
+  }, [products, priceRange, selectedCondition, selectedType, sortBy, division, district, thana]);
 
   const fetchCategoryAndProducts = async () => {
     try {
       setLoading(true);
       
-      // Fetch products by category using your API
       const productsRes = await fetch(`/api/product/allProduct/productByCategory?categoryId=${id}`);
       const productsData = await productsRes.json();
       
       if (productsData.success) {
-        // Your API returns data in productsData.data.products
         const productsList = productsData.data?.products || [];
         setProducts(productsList);
         setFilteredProducts(productsList);
         
-        // Set category from the response
         if (productsData.data?.category) {
           setCategory(productsData.data.category);
         }
@@ -84,6 +149,17 @@ export default function CategoryProductsPage() {
       filtered = filtered.filter(p => p.type?.toLowerCase() === selectedType.toLowerCase());
     }
 
+    // Filter by location
+    if (division) {
+      filtered = filtered.filter(p => p.division === division);
+    }
+    if (district) {
+      filtered = filtered.filter(p => p.district === district);
+    }
+    if (thana) {
+      filtered = filtered.filter(p => p.thana === thana);
+    }
+
     // Sort products
     switch (sortBy) {
       case 'newest':
@@ -116,6 +192,9 @@ export default function CategoryProductsPage() {
     setSelectedCondition('');
     setSelectedType('');
     setSortBy('newest');
+    setDivision('');
+    setDistrict('');
+    setThana('');
   };
 
   const getUniqueTypes = () => {
@@ -124,8 +203,18 @@ export default function CategoryProductsPage() {
   };
 
   const getProductImage = (product) => {
-    // Get the first available image (image1, image2, etc.)
     return product.image1 || product.image2 || product.image3 || product.image4 || product.image5 || '/placeholder-image.jpg';
+  };
+
+  const getConditionBadge = (condition) => {
+    const conditions = {
+      NEW: { label: 'New', color: 'bg-green-100 text-green-800' },
+      LIKE_NEW: { label: 'Like New', color: 'bg-blue-100 text-blue-800' },
+      GOOD: { label: 'Good', color: 'bg-yellow-100 text-yellow-800' },
+      FAIR: { label: 'Fair', color: 'bg-orange-100 text-orange-800' },
+      POOR: { label: 'Poor', color: 'bg-red-100 text-red-800' }
+    };
+    return conditions[condition] || { label: condition, color: 'bg-gray-100 text-gray-800' };
   };
 
   if (loading) {
@@ -171,7 +260,7 @@ export default function CategoryProductsPage() {
         </div>
 
         {/* Category Header */}
-        <div className="mb-8 text-center">
+        {/* <div className="mb-8 text-center">
           <div className="inline-block p-4 mb-4 bg-blue-100 rounded-full">
             <span className="text-5xl">{category?.icon || '📁'}</span>
           </div>
@@ -180,73 +269,137 @@ export default function CategoryProductsPage() {
             <p className="max-w-2xl mx-auto mt-2 text-gray-600">{category.description}</p>
           )}
           <p className="mt-2 text-sm text-gray-500">{filteredProducts.length} products found</p>
+        </div> */}
+
+        {/* Search and Sort Bar */}
+        <div className="flex flex-col gap-3 mb-5 sm:flex-row sm:items-center sm:justify-between">
+          {/* Filter Toggle Button */}
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="flex items-center justify-between w-full px-4 py-2 bg-white border border-gray-300 rounded-lg sm:w-auto"
+          >
+            <div className="flex items-center gap-2">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+              </svg>
+              <span className="text-gray-700">Filters</span>
+            </div>
+            <svg className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          <div className="flex items-center gap-3">
+            {/* Sort By */}
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="px-3 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="newest">Newest First</option>
+              <option value="oldest">Oldest First</option>
+              <option value="price_low">Price: Low to High</option>
+              <option value="price_high">Price: High to Low</option>
+              <option value="name_asc">Name: A to Z</option>
+              <option value="name_desc">Name: Z to A</option>
+            </select>
+
+            {/* View Mode Toggle */}
+            <div className="flex items-center space-x-1 bg-white border border-gray-300 rounded-lg">
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`p-2 rounded-lg transition-colors ${viewMode === 'grid' ? 'bg-blue-100 text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                </svg>
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`p-2 rounded-lg transition-colors ${viewMode === 'list' ? 'bg-blue-100 text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+            </div>
+          </div>
         </div>
 
-        <div className="flex flex-col gap-8 lg:flex-row">
-          {/* Sidebar Filters */}
-          <div className="flex-shrink-0 lg:w-72">
-            <div className="sticky p-5 bg-white rounded-lg shadow-lg top-24">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-800">Filters</h3>
-                <button
-                  onClick={resetFilters}
-                  className="text-sm text-blue-600 hover:text-blue-700"
-                >
-                  Reset All
-                </button>
-              </div>
+        {/* Active Filters Tags */}
+        {(selectedCondition || division || district || thana || priceRange.min || priceRange.max || selectedType) && (
+          <div className="flex flex-wrap gap-2 mb-4">
+            {selectedCondition && (
+              <span className="inline-flex items-center gap-1 px-2 py-1 text-xs text-blue-700 bg-blue-100 rounded">
+                Condition: {selectedCondition.toLowerCase().replace('_', ' ')}
+                <button onClick={() => setSelectedCondition('')} className="hover:text-blue-900">×</button>
+              </span>
+            )}
+            {division && (
+              <span className="inline-flex items-center gap-1 px-2 py-1 text-xs text-blue-700 bg-blue-100 rounded">
+                Division: {BANGLADESH_DIVISIONS.find(d => d.id === division)?.name}
+                <button onClick={() => { setDivision(''); setDistrict(''); setThana(''); }} className="hover:text-blue-900">×</button>
+              </span>
+            )}
+            {district && (
+              <span className="inline-flex items-center gap-1 px-2 py-1 text-xs text-blue-700 bg-blue-100 rounded">
+                District: {district}
+                <button onClick={() => { setDistrict(''); setThana(''); }} className="hover:text-blue-900">×</button>
+              </span>
+            )}
+            {thana && (
+              <span className="inline-flex items-center gap-1 px-2 py-1 text-xs text-blue-700 bg-blue-100 rounded">
+                Area: {thana}
+                <button onClick={() => setThana('')} className="hover:text-blue-900">×</button>
+              </span>
+            )}
+            {(priceRange.min || priceRange.max) && (
+              <span className="inline-flex items-center gap-1 px-2 py-1 text-xs text-blue-700 bg-blue-100 rounded">
+                Price: ৳{priceRange.min || 0} - ৳{priceRange.max || '∞'}
+                <button onClick={() => setPriceRange({ min: '', max: '' })} className="hover:text-blue-900">×</button>
+              </span>
+            )}
+            {selectedType && (
+              <span className="inline-flex items-center gap-1 px-2 py-1 text-xs text-blue-700 bg-blue-100 rounded">
+                Type: {selectedType}
+                <button onClick={() => setSelectedType('')} className="hover:text-blue-900">×</button>
+              </span>
+            )}
+            <button onClick={resetFilters} className="px-2 py-1 text-xs text-red-600 bg-red-100 rounded hover:bg-red-200">
+              Clear All
+            </button>
+          </div>
+        )}
 
-              {/* Price Range Filter */}
-              <div className="mb-6">
-                <h4 className="mb-3 font-medium text-gray-700">Price Range</h4>
-                <div className="flex space-x-2">
-                  <input
-                    type="number"
-                    placeholder="Min"
-                    value={priceRange.min}
-                    onChange={(e) => setPriceRange({ ...priceRange, min: e.target.value })}
-                    className="w-1/2 px-3 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <input
-                    type="number"
-                    placeholder="Max"
-                    value={priceRange.max}
-                    onChange={(e) => setPriceRange({ ...priceRange, max: e.target.value })}
-                    className="w-1/2 px-3 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-
+        {/* Filters Panel */}
+        {showFilters && (
+          <div className="p-4 mb-5 bg-white rounded-lg shadow-md">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {/* Condition Filter */}
-              <div className="mb-6">
-                <h4 className="mb-3 font-medium text-gray-700">Condition</h4>
-                <div className="space-y-2">
-                  {['NEW', 'LIKE_NEW', 'GOOD', 'FAIR', 'POOR'].map(condition => (
-                    <label key={condition} className="flex items-center space-x-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="condition"
-                        value={condition}
-                        checked={selectedCondition === condition}
-                        onChange={(e) => setSelectedCondition(e.target.value)}
-                        className="text-blue-600 focus:ring-blue-500"
-                      />
-                      <span className="text-sm text-gray-700 capitalize">
-                        {condition.toLowerCase().replace('_', ' ')}
-                      </span>
-                    </label>
-                  ))}
-                </div>
+              <div>
+                <label className="block mb-1 text-xs font-medium text-gray-700">Condition</label>
+                <select
+                  value={selectedCondition}
+                  onChange={(e) => setSelectedCondition(e.target.value)}
+                  className="w-full px-3 py-1.5 text-sm text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">All Conditions</option>
+                  <option value="NEW">New</option>
+                  <option value="LIKE_NEW">Like New</option>
+                  <option value="GOOD">Good</option>
+                  <option value="FAIR">Fair</option>
+                  <option value="POOR">Poor</option>
+                </select>
               </div>
 
               {/* Type Filter */}
               {getUniqueTypes().length > 0 && (
-                <div className="mb-6">
-                  <h4 className="mb-3 font-medium text-gray-700">Product Type</h4>
+                <div>
+                  <label className="block mb-1 text-xs font-medium text-gray-700">Product Type</label>
                   <select
                     value={selectedType}
                     onChange={(e) => setSelectedType(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-1.5 text-sm text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">All Types</option>
                     {getUniqueTypes().map(type => (
@@ -255,67 +408,101 @@ export default function CategoryProductsPage() {
                   </select>
                 </div>
               )}
-            </div>
-          </div>
 
-          {/* Products Section */}
-          <div className="flex-1">
-            {/* Sort and View Options */}
-            <div className="flex flex-wrap items-center justify-between gap-4 p-4 mb-6 bg-white rounded-lg shadow-lg">
-              <div className="flex items-center space-x-3">
-                <span className="text-sm text-gray-600">Sort by:</span>
+              {/* Division Filter */}
+              <div>
+                <label className="block mb-1 text-xs font-medium text-gray-700">Division</label>
                 <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="px-3 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={division}
+                  onChange={(e) => setDivision(e.target.value)}
+                  className="w-full px-3 py-1.5 text-sm text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="newest">Newest First</option>
-                  <option value="oldest">Oldest First</option>
-                  <option value="price_low">Price: Low to High</option>
-                  <option value="price_high">Price: High to Low</option>
-                  <option value="name_asc">Name: A to Z</option>
-                  <option value="name_desc">Name: Z to A</option>
+                  <option value="">All Divisions</option>
+                  {BANGLADESH_DIVISIONS.map(div => (
+                    <option key={div.id} value={div.id}>{div.name}</option>
+                  ))}
                 </select>
               </div>
 
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => setViewMode('grid')}
-                  className={`p-2 rounded-lg transition-colors ${viewMode === 'grid' ? 'bg-blue-100 text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}
+              {/* District Filter */}
+              <div>
+                <label className="block mb-1 text-xs font-medium text-gray-700">District</label>
+                <select
+                  value={district}
+                  onChange={(e) => setDistrict(e.target.value)}
+                  disabled={!division}
+                  className="w-full px-3 py-1.5 text-sm text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                  </svg>
-                </button>
-                <button
-                  onClick={() => setViewMode('list')}
-                  className={`p-2 rounded-lg transition-colors ${viewMode === 'list' ? 'bg-blue-100 text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}
+                  <option value="">All Districts</option>
+                  {districts.map(dist => (
+                    <option key={dist} value={dist}>{dist}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Thana Filter */}
+              <div>
+                <label className="block mb-1 text-xs font-medium text-gray-700">Thana/Area</label>
+                <select
+                  value={thana}
+                  onChange={(e) => setThana(e.target.value)}
+                  disabled={!district}
+                  className="w-full px-3 py-1.5 text-sm text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                  </svg>
-                </button>
+                  <option value="">All Areas</option>
+                  {thanas.map(area => (
+                    <option key={area} value={area}>{area}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Price Range */}
+              <div>
+                <label className="block mb-1 text-xs font-medium text-gray-700">Price Range</label>
+                <div className="flex gap-1">
+                  <input
+                    type="number"
+                    placeholder="Min"
+                    value={priceRange.min}
+                    onChange={(e) => setPriceRange({ ...priceRange, min: e.target.value })}
+                    className="w-1/2 px-2 py-1.5 text-sm text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <input
+                    type="number"
+                    placeholder="Max"
+                    value={priceRange.max}
+                    onChange={(e) => setPriceRange({ ...priceRange, max: e.target.value })}
+                    className="w-1/2 px-2 py-1.5 text-sm text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
               </div>
             </div>
+          </div>
+        )}
 
-            {/* Products Display */}
+        <div className="flex flex-col gap-8 lg:flex-row">
+          {/* Products Section */}
+          <div className="flex-1">
             {filteredProducts.length === 0 ? (
               <div className="p-12 text-center bg-white rounded-lg shadow-lg">
                 <div className="mb-4 text-6xl">🔍</div>
                 <h3 className="mb-2 text-xl font-semibold text-gray-800">No Products Found</h3>
                 <p className="text-gray-600">Try adjusting your filters or browse other categories.</p>
+                <button onClick={resetFilters} className="px-6 py-2 mt-4 text-white bg-blue-600 rounded-lg hover:bg-blue-700">
+                  Clear All Filters
+                </button>
               </div>
             ) : (
               viewMode === 'grid' ? (
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                   {filteredProducts.map((product) => (
-                    <ProductCard key={product.id} product={product} getProductImage={getProductImage} />
+                    <ProductCard key={product.id} product={product} getProductImage={getProductImage} getConditionBadge={getConditionBadge} />
                   ))}
                 </div>
               ) : (
                 <div className="space-y-4">
                   {filteredProducts.map((product) => (
-                    <ProductListItem key={product.id} product={product} getProductImage={getProductImage} />
+                    <ProductListItem key={product.id} product={product} getProductImage={getProductImage} getConditionBadge={getConditionBadge} />
                   ))}
                 </div>
               )
@@ -328,7 +515,9 @@ export default function CategoryProductsPage() {
 }
 
 // Product Card Component (Grid View)
-function ProductCard({ product, getProductImage }) {
+function ProductCard({ product, getProductImage, getConditionBadge }) {
+  const conditionBadge = getConditionBadge(product.condition);
+  
   return (
     <Link href={`/pages/product/productById/${product.id}`} className="group">
       <div className="overflow-hidden transition-all duration-300 bg-white rounded-lg shadow-md hover:shadow-xl hover:-translate-y-1">
@@ -344,8 +533,8 @@ function ProductCard({ product, getProductImage }) {
             </span>
           )}
           {product.condition && (
-            <span className="absolute px-2 py-1 text-xs text-white bg-blue-600 rounded top-2 left-2">
-              {product.condition.toLowerCase().replace('_', ' ')}
+            <span className={`absolute top-2 left-2 text-xs px-2 py-1 rounded ${conditionBadge.color}`}>
+              {conditionBadge.label}
             </span>
           )}
         </div>
@@ -358,6 +547,14 @@ function ProductCard({ product, getProductImage }) {
           {product.type && (
             <p className="mt-2 text-xs text-gray-400">{product.type}</p>
           )}
+          {(product.district || product.thana) && (
+            <div className="flex items-center mt-2 text-xs text-gray-400">
+              <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              </svg>
+              <span>{product.district}{product.thana && `, ${product.thana}`}</span>
+            </div>
+          )}
         </div>
       </div>
     </Link>
@@ -365,9 +562,11 @@ function ProductCard({ product, getProductImage }) {
 }
 
 // Product List Item Component (List View)
-function ProductListItem({ product, getProductImage }) {
+function ProductListItem({ product, getProductImage, getConditionBadge }) {
+  const conditionBadge = getConditionBadge(product.condition);
+  
   return (
-    <Link href={`/pages/product/productById/${product.id}`}  className="group">
+    <Link href={`/pages/product/productById/${product.id}`} className="group">
       <div className="flex flex-col overflow-hidden transition-all duration-300 bg-white rounded-lg shadow-md hover:shadow-xl sm:flex-row">
         <div className="relative h-48 overflow-hidden sm:w-48">
           <img
@@ -395,9 +594,9 @@ function ProductListItem({ product, getProductImage }) {
             </div>
             <div className="text-right">
               <p className="text-xl font-bold text-blue-600">৳{product.price.toLocaleString()}</p>
-              <p className="mt-1 text-xs text-gray-400 capitalize">
-                {product.condition?.toLowerCase().replace('_', ' ')}
-              </p>
+              <span className={`inline-block mt-1 text-xs px-2 py-0.5 rounded ${conditionBadge.color}`}>
+                {conditionBadge.label}
+              </span>
             </div>
           </div>
           <p className="mt-2 text-sm text-gray-600 line-clamp-2">{product.description}</p>
@@ -406,6 +605,12 @@ function ProductListItem({ product, getProductImage }) {
               <span>👁️ {product.viewCount || 0} views</span>
               <span>•</span>
               <span>📅 {new Date(product.createdAt).toLocaleDateString()}</span>
+              {(product.district || product.thana) && (
+                <>
+                  <span>•</span>
+                  <span>📍 {product.district}{product.thana && `, ${product.thana}`}</span>
+                </>
+              )}
             </div>
             <span className="text-sm font-medium text-blue-600 group-hover:underline">View Details →</span>
           </div>

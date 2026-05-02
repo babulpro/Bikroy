@@ -68,21 +68,26 @@ model Category{
 
  
 
-
-model Product{
+model Product {
   id String @id @default(auto()) @map("_id") @db.ObjectId
   name  String @unique
   description String
   currency String
   price   Float
   condition ProductCondition @default(NEW)
-  isFeatured Boolean
-  isBoosted  Boolean
+  isFeatured Boolean @default(false)
+  isBoosted  Boolean @default(false)
   contactPhone    String
   contactEmail    String
   viewCount    Int @default(0)
   type  String 
   status  ProductStatus @default(ACTIVE)
+  
+  // Location Fields for better search
+  division String?   // Division/State (e.g., Dhaka, Chittagong, Rajshahi)
+  district String?   // District/City (e.g., Dhaka, Gazipur, Narayanganj)
+  thana String?      // Thana/Upazila/Area (e.g., Gulshan, Uttara, Motijheel)
+  
   message Message[]
   image1 String?
   image2 String?
@@ -90,13 +95,12 @@ model Product{
   image4 String?
   image5 String?
   favorite Favorite[]
-  
-
 
   userId String @db.ObjectId
   categoryId  String @db.ObjectId
-  user User @relation(fields:[userId],references:[id] ,onDelete:Restrict,onUpdate:Cascade)
-  category Category @relation(fields:[categoryId],references:[id] ,onDelete:Restrict,onUpdate:Cascade)
+  user User @relation(fields:[userId], references:[id], onDelete:Restrict, onUpdate:Cascade)
+  category Category @relation(fields:[categoryId], references:[id], onDelete:Restrict, onUpdate:Cascade)
+  
   createdAt  DateTime @default(now())  
   updatedAt   DateTime @updatedAt 
 
@@ -104,8 +108,9 @@ model Product{
   @@index([categoryId])
   @@index([status])
   @@index([createdAt])
-  
-
+  @@index([division])    // Add index for faster location search
+  @@index([district])    // Add index for faster district search
+  @@index([thana])       // Add index for faster thana search
 }
 
 

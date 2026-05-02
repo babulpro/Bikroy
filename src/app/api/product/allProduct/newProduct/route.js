@@ -39,6 +39,9 @@ export async function POST(request) {
       contactEmail,
       type,
       categoryId,
+      division,
+      district,
+      thana,
       image1,
       image2,
       image3,
@@ -46,7 +49,7 @@ export async function POST(request) {
       image5,
       isFeatured = false,
       isBoosted = false
-    } = body; 
+    } = body;
 
     // Validate required fields
     if (!name || !description || !price || !contactPhone || !categoryId) {
@@ -92,7 +95,7 @@ export async function POST(request) {
       );
     }
 
-    // Create product
+    // Create product with location fields
     const product = await prisma.product.create({
       data: {
         name,
@@ -105,6 +108,9 @@ export async function POST(request) {
         type: type || null,
         categoryId,
         userId: user.id,
+        division: division || null,
+        district: district || null,
+        thana: thana || null,
         image1: image1 || null,
         image2: image2 || null,
         image3: image3 || null,
@@ -127,7 +133,7 @@ export async function POST(request) {
           select: {
             id: true,
             name: true,
-            email: true, 
+            email: true,
           }
         }
       }
@@ -157,7 +163,7 @@ export async function POST(request) {
   }
 }
 
-// GET - Fetch all products (with pagination and filters)
+// GET - Fetch all products (with pagination, filters, and location search)
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -170,6 +176,11 @@ export async function GET(request) {
     const maxPrice = searchParams.get('maxPrice');
     const condition = searchParams.get('condition');
     
+    // Location filters
+    const division = searchParams.get('division');
+    const district = searchParams.get('district');
+    const thana = searchParams.get('thana');
+    
     const skip = (page - 1) * limit;
 
     // Build filter
@@ -181,6 +192,18 @@ export async function GET(request) {
     
     if (condition) {
       filter.condition = condition;
+    }
+    
+    if (division) {
+      filter.division = division;
+    }
+    
+    if (district) {
+      filter.district = district;
+    }
+    
+    if (thana) {
+      filter.thana = thana;
     }
     
     if (search) {
@@ -204,7 +227,8 @@ export async function GET(request) {
           user: {
             select: {
               id: true,
-              name: true, 
+              name: true,
+              email: true,
             }
           },
           category: {
@@ -233,6 +257,11 @@ export async function GET(request) {
         total,
         totalPages: Math.ceil(total / limit),
         hasMore: skip + products.length < total
+      },
+      filters: {
+        division: division || null,
+        district: district || null,
+        thana: thana || null
       }
     });
 
