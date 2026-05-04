@@ -1,8 +1,8 @@
 // src/app/api/user/profile/route.js
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers'; 
-import { DecodedJwtToken } from '@/app/Utility/authFunction/JwtHelper';
 import prisma from '@/app/Utility/prisma/prisma';
+import { DecodedJwtToken } from '@/app/Utility/authFunction/JwtHelper';
 
 export async function GET() {
   try {

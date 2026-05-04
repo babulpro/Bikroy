@@ -27,7 +27,11 @@ model User{
   favorite Favorite[] 
   sentMessages     Message[] @relation("SentMessages")
   receivedMessages Message[] @relation("ReceivedMessages")
-  
+  lastLoginAt  DateTime?
+  loginCount   Int      @default(0)
+  isActive     Boolean  @default(true)
+  isVerified   Boolean  @default(false)
+  verifiedAt   DateTime?
   
   createdAt  DateTime @default(now())  
   updatedAt   DateTime  @updatedAt  

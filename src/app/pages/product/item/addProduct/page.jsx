@@ -1,7 +1,8 @@
 // src/app/pages/product/item/addProduct/page.jsx
 'use client';
 
-import { useState, useEffect } from 'react';
+
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import ImageUpload from '@/components/ImageUpload';
 
@@ -42,12 +43,41 @@ const BANGLADESH_THANAS = {
   "Mymensingh": ["Mymensingh Sadar", "Kotwali", "Ganginarpar", "Trishal", "Muktagacha"]
 };
 
+
+const VALIDATION_PATTERNS = {
+  name: /^[a-zA-Z0-9\s\-\_\&\'\,\.\(\)]{3,100}$/,
+  phone: /^(?:\+8801|01)[3-9]\d{8}$/,
+  email: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+  price: /^\d+(?:\.\d{1,2})?$/,
+  description: /^[\s\S]{20,5000}$/,
+  type: /^[a-zA-Z0-9\s\-]{2,50}$/,
+};
+
+// XSS Prevention - Sanitize input
+const sanitizeInput = (input) => {
+  if (!input) return '';
+  return input
+    .replace(/[<>]/g, '') // Remove < and >
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+    .replace(/\//g, '&#x2F;');
+};
+
+// SQL Injection Prevention - Escape special characters
+const escapeSqlInput = (input) => {
+  if (!input) return '';
+  return input.replace(/['"\\;*%]/g, '');
+};
+
+
 export default function UploadPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState([]);
   const [districts, setDistricts] = useState([]);
   const [thanas, setThanas] = useState([]);
+  const [rateLimit, setRateLimit] = useState({ attempts: 0, lastAttempt: null });
   
   const [formData, setFormData] = useState({
     name: '',
@@ -72,6 +102,7 @@ export default function UploadPage() {
   });
   
   const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
 
   // Fetch categories on load
   useEffect(() => {
@@ -90,48 +121,151 @@ export default function UploadPage() {
     }
   };
 
+  // Real-time validation for each field
+  const validateField = useCallback((name, value) => {
+    const trimmedValue = value?.trim() || '';
+    
+    switch (name) {
+      case 'name':
+        if (!trimmedValue) return 'Product name is required';
+        if (trimmedValue.length < 3) return 'Name must be at least 3 characters';
+        if (trimmedValue.length > 100) return 'Name cannot exceed 100 characters';
+        if (!VALIDATION_PATTERNS.name.test(trimmedValue)) return 'Name contains invalid characters';
+        if (/(<script|javascript:|onclick|onerror)/i.test(trimmedValue)) return 'Invalid characters detected';
+        return '';
+      
+      case 'description':
+        if (!trimmedValue) return 'Description is required';
+        if (trimmedValue.length < 20) return 'Description must be at least 20 characters';
+        if (trimmedValue.length > 5000) return 'Description cannot exceed 5000 characters';
+        if (/(<script|javascript:|onclick|onerror)/i.test(trimmedValue)) return 'Invalid content detected';
+        return '';
+      
+      case 'price':
+        if (!trimmedValue) return 'Price is required';
+        if (!VALIDATION_PATTERNS.price.test(trimmedValue)) return 'Enter a valid price (e.g., 99.99)';
+        const priceNum = parseFloat(trimmedValue);
+        if (priceNum <= 0) return 'Price must be greater than 0';
+        if (priceNum > 10000000) return 'Price cannot exceed 10,000,000';
+        return '';
+      
+      case 'contactPhone':
+        if (!trimmedValue) return 'Phone number is required';
+        if (!VALIDATION_PATTERNS.phone.test(trimmedValue)) return 'Enter a valid Bangladesh phone number (e.g., 01712345678 or +8801712345678)';
+        return '';
+      
+      case 'contactEmail':
+        if (trimmedValue && !VALIDATION_PATTERNS.email.test(trimmedValue)) return 'Enter a valid email address';
+        if (trimmedValue && trimmedValue.length > 100) return 'Email cannot exceed 100 characters';
+        return '';
+      
+      case 'type':
+        if (trimmedValue && !VALIDATION_PATTERNS.type.test(trimmedValue)) return 'Type contains invalid characters';
+        if (trimmedValue && trimmedValue.length > 50) return 'Type cannot exceed 50 characters';
+        return '';
+      
+      case 'categoryId':
+        if (!trimmedValue) return 'Please select a category';
+        return '';
+      
+      case 'division':
+        if (!trimmedValue) return 'Please select a division';
+        return '';
+      
+      case 'district':
+        if (!trimmedValue) return 'Please select a district';
+        return '';
+      
+      default:
+        return '';
+    }
+  }, []);
+
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
+    
+    // Sanitize input
+    const sanitizedValue = type === 'checkbox' ? checked : sanitizeInput(value);
+    
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: sanitizedValue
     }));
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
-    }
+    
+    // Validate on change
+    const error = validateField(name, sanitizedValue);
+    setErrors(prev => ({ ...prev, [name]: error }));
+    
+    // Mark as touched
+    setTouched(prev => ({ ...prev, [name]: true }));
+  };
+
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    setTouched(prev => ({ ...prev, [name]: true }));
+    const error = validateField(name, value);
+    setErrors(prev => ({ ...prev, [name]: error }));
   };
 
   const handleDivisionChange = (division) => {
     setFormData(prev => ({ ...prev, division, district: '', thana: '' }));
     setDistricts(BANGLADESH_DISTRICTS[division] || []);
     setThanas([]);
+    setErrors(prev => ({ ...prev, division: '', district: '' }));
   };
 
   const handleDistrictChange = (district) => {
     setFormData(prev => ({ ...prev, district, thana: '' }));
     setThanas(BANGLADESH_THANAS[district] || []);
+    setErrors(prev => ({ ...prev, district: '' }));
   };
 
   const handleImageUpload = (imageField, imageUrl) => {
-    setFormData(prev => ({
-      ...prev,
-      [imageField]: imageUrl
-    }));
+    // Validate image URL format
+    if (imageUrl && !/^https?:\/\/.+\.(jpg|jpeg|png|webp|gif)$/i.test(imageUrl)) {
+      setErrors(prev => ({ ...prev, [imageField]: 'Invalid image URL format' }));
+      return;
+    }
+    setFormData(prev => ({ ...prev, [imageField]: imageUrl }));
+    setErrors(prev => ({ ...prev, [imageField]: '' }));
+  };
+
+  // Check rate limiting (prevent spam submissions)
+  const checkRateLimit = () => {
+    const now = Date.now();
+    const hourAgo = now - 60 * 60 * 1000;
+    
+    if (rateLimit.lastAttempt && rateLimit.lastAttempt > hourAgo) {
+      if (rateLimit.attempts >= 10) {
+        return false; // Too many attempts
+      }
+      setRateLimit(prev => ({ ...prev, attempts: prev.attempts + 1, lastAttempt: now }));
+    } else {
+      setRateLimit({ attempts: 1, lastAttempt: now });
+    }
+    return true;
   };
 
   const validateForm = () => {
     const newErrors = {};
-
-    if (!formData.name.trim()) newErrors.name = 'Product name is required';
-    if (!formData.description.trim()) newErrors.description = 'Description is required';
-    else if (formData.description.length < 20) newErrors.description = 'Description must be at least 20 characters';
-    if (!formData.price) newErrors.price = 'Price is required';
-    else if (isNaN(formData.price) || formData.price <= 0) newErrors.price = 'Price must be a valid positive number';
-    if (!formData.contactPhone) newErrors.contactPhone = 'Contact phone is required';
-    if (!formData.categoryId) newErrors.categoryId = 'Please select a category';
-    if (!formData.division) newErrors.division = 'Please select a division';
-    if (!formData.district) newErrors.district = 'Please select a district';
-
+    const fields = ['name', 'description', 'price', 'contactPhone', 'categoryId', 'division', 'district'];
+    
+    for (const field of fields) {
+      const error = validateField(field, formData[field]);
+      if (error) newErrors[field] = error;
+    }
+    
+    // Additional check for email if provided
+    if (formData.contactEmail) {
+      const emailError = validateField('contactEmail', formData.contactEmail);
+      if (emailError) newErrors.contactEmail = emailError;
+    }
+    
+    // Check for XSS in optional fields
+    if (formData.type && validateField('type', formData.type)) {
+      newErrors.type = validateField('type', formData.type);
+    }
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -139,22 +273,43 @@ export default function UploadPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    // Prevent double submission
+    if (loading) return;
+    
+    // Check rate limit
+    if (!checkRateLimit()) {
+      alert('Too many attempts. Please wait before submitting again.');
+      return;
+    }
+    
+    // Validate all fields
     if (!validateForm()) {
+      // Scroll to first error
+      const firstError = document.querySelector('.border-red-500');
+      if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
 
     setLoading(true);
 
     try {
+      // Escape SQL characters before sending
+      const safeData = {
+        ...formData,
+        name: escapeSqlInput(formData.name),
+        description: escapeSqlInput(formData.description),
+        type: formData.type ? escapeSqlInput(formData.type) : '',
+        contactPhone: escapeSqlInput(formData.contactPhone),
+        contactEmail: formData.contactEmail ? escapeSqlInput(formData.contactEmail) : '',
+        price: parseFloat(formData.price)
+      };
+
       const response = await fetch('/api/product/allProduct/newProduct', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          ...formData,
-          price: parseFloat(formData.price)
-        }),
+        body: JSON.stringify(safeData),
       });
 
       const data = await response.json();
@@ -166,7 +321,7 @@ export default function UploadPage() {
       }
     } catch (error) {
       console.error('Submit error:', error);
-      alert('Something went wrong');
+      alert('Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -180,6 +335,13 @@ export default function UploadPage() {
     }));
   };
 
+  // Helper to show error message
+  const showError = (fieldName) => {
+    return touched[fieldName] && errors[fieldName] && (
+      <p className="mt-1 text-sm text-red-500">{errors[fieldName]}</p>
+    );
+  };
+
   return (
     <div className="min-h-screen py-12 bg-gradient-to-br from-blue-50 to-gray-100">
       <div className="max-w-5xl px-4 mx-auto sm:px-6 lg:px-8">
@@ -190,7 +352,7 @@ export default function UploadPage() {
         </div>
 
         {/* Product Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6" noValidate>
           {/* Basic Information */}
           <div className="overflow-hidden bg-white rounded-lg shadow-lg">
             <div className="px-6 py-4 bg-blue-600">
@@ -206,12 +368,15 @@ export default function UploadPage() {
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
+                  onBlur={handleBlur}
                   placeholder="e.g., iPhone 14 Pro, Sony Headphones"
+                  maxLength={100}
                   className={`w-full px-4 text-slate-600 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    errors.name ? 'border-red-500' : 'border-gray-300'
+                    touched.name && errors.name ? 'border-red-500' : 'border-gray-300'
                   }`}
                 />
-                {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
+                {showError('name')}
+                <p className="mt-1 text-xs text-gray-400">3-100 characters, letters, numbers, spaces, and basic punctuation</p>
               </div>
 
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -223,8 +388,9 @@ export default function UploadPage() {
                     name="categoryId"
                     value={formData.categoryId}
                     onChange={handleInputChange}
+                    onBlur={handleBlur}
                     className={`w-full px-4 text-slate-600 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.categoryId ? 'border-red-500' : 'border-gray-300'
+                      touched.categoryId && errors.categoryId ? 'border-red-500' : 'border-gray-300'
                     }`}
                   >
                     <option value="">Select a category</option>
@@ -234,7 +400,7 @@ export default function UploadPage() {
                       </option>
                     ))}
                   </select>
-                  {errors.categoryId && <p className="mt-1 text-sm text-red-500">{errors.categoryId}</p>}
+                  {showError('categoryId')}
                 </div>
 
                 <div>
@@ -244,9 +410,12 @@ export default function UploadPage() {
                     name="type"
                     value={formData.type}
                     onChange={handleInputChange}
+                    onBlur={handleBlur}
                     placeholder="e.g., Mobile, Laptop, Furniture"
+                    maxLength={50}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
+                  {showError('type')}
                 </div>
               </div>
 
@@ -259,13 +428,17 @@ export default function UploadPage() {
                   rows="5"
                   value={formData.description}
                   onChange={handleInputChange}
+                  onBlur={handleBlur}
                   placeholder="Describe your product in detail... (minimum 20 characters)"
+                  maxLength={5000}
                   className={`w-full px-4 text-slate-600 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none ${
-                    errors.description ? 'border-red-500' : 'border-gray-300'
+                    touched.description && errors.description ? 'border-red-500' : 'border-gray-300'
                   }`}
                 />
-                {errors.description && <p className="mt-1 text-sm text-red-500">{errors.description}</p>}
-                <p className="mt-1 text-xs text-gray-500">{formData.description.length}/5000 characters</p>
+                {showError('description')}
+                <p className="mt-1 text-xs text-gray-500">
+                  {formData.description.length}/5000 characters
+                </p>
               </div>
             </div>
           </div>
@@ -278,17 +451,15 @@ export default function UploadPage() {
             </div>
             <div className="p-6 space-y-5">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                {/* Division */}
                 <div>
                   <label className="block mb-1 text-sm font-medium text-gray-700">
                     Division <span className="text-red-500">*</span>
                   </label>
                   <select
-                    name="division"
                     value={formData.division}
                     onChange={(e) => handleDivisionChange(e.target.value)}
                     className={`w-full px-4 text-slate-700 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.division ? 'border-red-500' : 'border-gray-300'
+                      touched.division && errors.division ? 'border-red-500' : 'border-gray-300'
                     }`}
                   >
                     <option value="">Select Division</option>
@@ -296,21 +467,19 @@ export default function UploadPage() {
                       <option key={div.id} value={div.id}>{div.name}</option>
                     ))}
                   </select>
-                  {errors.division && <p className="mt-1 text-sm text-red-500">{errors.division}</p>}
+                  {showError('division')}
                 </div>
 
-                {/* District */}
                 <div>
                   <label className="block mb-1 text-sm font-medium text-gray-700">
                     District <span className="text-red-500">*</span>
                   </label>
                   <select
-                    name="district"
                     value={formData.district}
                     onChange={(e) => handleDistrictChange(e.target.value)}
                     disabled={!formData.division}
                     className={`w-full px-4 text-slate-700 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 ${
-                      errors.district ? 'border-red-500' : 'border-gray-300'
+                      touched.district && errors.district ? 'border-red-500' : 'border-gray-300'
                     }`}
                   >
                     <option value="">Select District</option>
@@ -318,16 +487,14 @@ export default function UploadPage() {
                       <option key={district} value={district}>{district}</option>
                     ))}
                   </select>
-                  {errors.district && <p className="mt-1 text-sm text-red-500">{errors.district}</p>}
+                  {showError('district')}
                 </div>
 
-                {/* Thana / Area */}
                 <div>
                   <label className="block mb-1 text-sm font-medium text-gray-700">
                     Thana / Area <span className="text-xs text-gray-400">(Optional)</span>
                   </label>
                   <select
-                    name="thana"
                     value={formData.thana}
                     onChange={handleInputChange}
                     disabled={!formData.district}
@@ -370,14 +537,18 @@ export default function UploadPage() {
                       name="price"
                       value={formData.price}
                       onChange={handleInputChange}
+                      onBlur={handleBlur}
                       placeholder="0.00"
                       step="0.01"
+                      min="0.01"
+                      max="10000000"
                       className={`flex-1 px-4 text-slate-600 py-2 border rounded-r-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                        errors.price ? 'border-red-500' : 'border-gray-300'
+                        touched.price && errors.price ? 'border-red-500' : 'border-gray-300'
                       }`}
                     />
                   </div>
-                  {errors.price && <p className="mt-1 text-sm text-red-500">{errors.price}</p>}
+                  {showError('price')}
+                  <p className="mt-1 text-xs text-gray-400">Maximum price: 10,000,000</p>
                 </div>
 
                 <div>
@@ -416,6 +587,7 @@ export default function UploadPage() {
                       currentImage={currentImage}
                       onUploadComplete={handleImageUpload}
                     />
+                    {errors[field] && <p className="mt-1 text-xs text-red-500">{errors[field]}</p>}
                   </div>
                 ))}
               </div>
@@ -438,12 +610,14 @@ export default function UploadPage() {
                     name="contactPhone"
                     value={formData.contactPhone}
                     onChange={handleInputChange}
+                    onBlur={handleBlur}
                     placeholder="+880 1XXX XXXXXX"
                     className={`w-full px-4 text-slate-600 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.contactPhone ? 'border-red-500' : 'border-gray-300'
+                      touched.contactPhone && errors.contactPhone ? 'border-red-500' : 'border-gray-300'
                     }`}
                   />
-                  {errors.contactPhone && <p className="mt-1 text-sm text-red-500">{errors.contactPhone}</p>}
+                  {showError('contactPhone')}
+                  <p className="mt-1 text-xs text-gray-400">Format: 01712345678 or +8801712345678</p>
                 </div>
 
                 <div>
@@ -453,9 +627,14 @@ export default function UploadPage() {
                     name="contactEmail"
                     value={formData.contactEmail}
                     onChange={handleInputChange}
+                    onBlur={handleBlur}
                     placeholder="contact@example.com"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    maxLength={100}
+                    className={`w-full px-4 py-2 border rounded-lg text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                      touched.contactEmail && errors.contactEmail ? 'border-red-500' : 'border-gray-300'
+                    }`}
                   />
+                  {showError('contactEmail')}
                 </div>
               </div>
             </div>
@@ -496,7 +675,7 @@ export default function UploadPage() {
             <button
               type="button"
               onClick={() => router.back()}
-              className="px-6 py-2 transition-colors border border-gray-300 rounded-lg bg-amber-400 hover:bg-amber-500"
+              className="px-6 py-2 transition-colors border border-gray-300 rounded-lg bg-amber-700 hover:bg-amber-500"
             >
               Cancel
             </button>
