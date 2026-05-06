@@ -3,18 +3,16 @@ import { NextResponse } from 'next/server';
 import bcrypt from 'bcrypt';
 import prisma from '@/app/Utility/prisma/prisma';
 import { RateLimiter } from '@/app/Utility/rateLimite/RateLimiter';
+import { CreateJwtToken } from '@/app/Utility/authFunction/JwtHelper';
 
-// Create rate limiter for registration
 const registerRateLimiter = new RateLimiter();
 
-// Validation patterns
 const VALIDATION = {
-    name: /^[a-zA-Z\u0980-\u09FF\s]{2,50}$/, // Bengali & English letters, spaces, 2-50 chars
+    name: /^[a-zA-Z\u0980-\u09FF\s]{2,50}$/,
     email: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
     password: /^.{6,}$/,
 };
 
-// Sanitize functions
 const sanitizeName = (name) => {
     return name.trim().replace(/[<>]/g, '').substring(0, 50);
 };
@@ -30,14 +28,9 @@ export async function POST(request) {
                    request.headers.get('x-real-ip') || 
                    'unknown';
         
-        // Max 3 registration attempts per hour per IP
         if (!registerRateLimiter.isAllowed(ip, 3, 60 * 60 * 1000)) {
             return NextResponse.json(
-                { 
-                    status: 'failed', 
-                    msg: 'Too many registration attempts. Please try again later.',
-                    code: 'RATE_LIMIT_001'
-                },
+                { status: 'failed', msg: 'Too many registration attempts. Please try again later.' },
                 { status: 429 }
             );
         }
@@ -55,7 +48,7 @@ export async function POST(request) {
 
         const { name, email, password } = body;
 
-        // ========== 3. CHECK REQUIRED FIELDS ==========
+        // ========== 3-10. VALIDATION ==========
         if (!name || !email || !password) {
             return NextResponse.json(
                 { status: 'failed', msg: 'Name, email and password are required' },
@@ -63,7 +56,6 @@ export async function POST(request) {
             );
         }
 
-        // ========== 4. VALIDATE FIELD TYPES ==========
         if (typeof name !== 'string' || typeof email !== 'string' || typeof password !== 'string') {
             return NextResponse.json(
                 { status: 'failed', msg: 'Invalid input format' },
@@ -71,22 +63,16 @@ export async function POST(request) {
             );
         }
 
-        // ========== 5. SANITIZE INPUTS ==========
         const sanitizedName = sanitizeName(name);
         const sanitizedEmail = sanitizeEmail(email);
         
-        // ========== 6. VALIDATE NAME ==========
         if (!VALIDATION.name.test(sanitizedName)) {
             return NextResponse.json(
-                { 
-                    status: 'failed', 
-                    msg: 'Name must be 2-50 characters and contain only letters and spaces' 
-                },
+                { status: 'failed', msg: 'Name must be 2-50 characters and contain only letters and spaces' },
                 { status: 400 }
             );
         }
 
-        // ========== 7. VALIDATE EMAIL FORMAT ==========
         if (!VALIDATION.email.test(sanitizedEmail)) {
             return NextResponse.json(
                 { status: 'failed', msg: 'Please enter a valid email address' },
@@ -94,7 +80,6 @@ export async function POST(request) {
             );
         }
 
-        // ========== 8. VALIDATE EMAIL LENGTH ==========
         if (sanitizedEmail.length > 100) {
             return NextResponse.json(
                 { status: 'failed', msg: 'Email is too long' },
@@ -102,7 +87,6 @@ export async function POST(request) {
             );
         }
 
-        // ========== 9. VALIDATE PASSWORD ==========
         if (password.length < 6) {
             return NextResponse.json(
                 { status: 'failed', msg: 'Password must be at least 6 characters' },
@@ -117,14 +101,6 @@ export async function POST(request) {
             );
         }
 
-        if (!VALIDATION.password.test(password)) {
-            return NextResponse.json(
-                { status: 'failed', msg: 'Password must be at least 6 characters' },
-                { status: 400 }
-            );
-        }
-
-        // ========== 10. CHECK FOR XSS IN NAME ==========
         const xssPattern = /<script|javascript:|onclick|onerror|alert\(/i;
         if (xssPattern.test(sanitizedName)) {
             return NextResponse.json(
@@ -133,23 +109,13 @@ export async function POST(request) {
             );
         }
 
-        // ========== 11. CHECK IF USER ALREADY EXISTS ==========
-        let existingUser;
-        try {
-            existingUser = await prisma.user.findUnique({
-                where: { email: sanitizedEmail },
-                select: { id: true, email: true }
-            });
-        } catch (dbError) {
-            console.error('Database error:', dbError);
-            return NextResponse.json(
-                { status: 'failed', msg: 'Service unavailable. Please try again.' },
-                { status: 500 }
-            );
-        }
+        // ========== 11. CHECK EXISTING USER ==========
+        const existingUser = await prisma.user.findUnique({
+            where: { email: sanitizedEmail },
+            select: { id: true, email: true }
+        });
 
         if (existingUser) {
-            // Generic message for security
             return NextResponse.json(
                 { status: 'failed', msg: 'Email already registered' },
                 { status: 400 }
@@ -157,63 +123,51 @@ export async function POST(request) {
         }
 
         // ========== 12. HASH PASSWORD ==========
-        let hashedPassword;
-        try {
-            const saltRounds = 10;
-            hashedPassword = await bcrypt.hash(password, saltRounds);
-        } catch (hashError) {
-            console.error('Password hashing error:', hashError);
-            return NextResponse.json(
-                { status: 'failed', msg: 'Registration failed. Please try again.' },
-                { status: 500 }
-            );
-        }
+        const hashedPassword = await bcrypt.hash(password, 10);
 
-        // ========== 13. CREATE NEW USER ==========
-        let newUser;
-        try {
-            newUser = await prisma.user.create({
-                data: {
-                    name: sanitizedName,
-                    email: sanitizedEmail,
-                    password: hashedPassword,
-                    role: 'User',
-                    createdAt: new Date(),
-                    updatedAt: new Date()
-                },
-                select: {
-                    id: true,
-                    name: true,
-                    email: true,
-                    role: true,
-                    createdAt: true
-                }
-            });
-        } catch (createError) {
-            console.error('User creation error:', createError);
-            return NextResponse.json(
-                { status: 'failed', msg: 'Registration failed. Please try again.' },
-                { status: 500 }
-            );
-        }
+        // ========== 13. CREATE USER ==========
+        const newUser = await prisma.user.create({
+            data: {
+                name: sanitizedName,
+                email: sanitizedEmail,
+                password: hashedPassword,
+                role: 'User',
+            },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+            }
+        });
 
-        // ========== 14. CLEAR RATE LIMITER ON SUCCESS ==========
         registerRateLimiter.clear(ip);
 
-        // ========== 15. OPTIONAL: SEND WELCOME EMAIL ==========
-        // You can implement email sending here
-        // await sendWelcomeEmail(newUser.email, newUser.name);
+        // ========== 14. GENERATE TOKEN (NEW USER) ==========
+        const token = await CreateJwtToken(newUser.role, newUser.id, newUser.email);
 
-        // ========== 16. RETURN SUCCESS RESPONSE ==========
-        return NextResponse.json({
+        // ========== 15. CREATE RESPONSE WITH COOKIE ==========
+        const response = NextResponse.json({
             status: 'success',
-            msg: 'Registration successful! Please login to continue.',
+            msg: 'Registration successful! Welcome to SellKoro.',
             data: newUser
         }, { status: 201 });
 
+        // Set cookie for auto-login
+        response.cookies.set({
+            name: "token",
+            value: token,
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: "strict",
+            path: "/",
+            maxAge: 60 * 60 * 24 * 7 // 7 days
+        });
+
+        return response;
+
     } catch (error) {
         console.error('Registration error:', error);
-        // Don't expose internal error details
         return NextResponse.json(
             { status: 'failed', msg: 'Something went wrong. Please try again.' },
             { status: 500 }

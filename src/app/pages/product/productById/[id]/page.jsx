@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link'; 
-import MessageModal from '@/components/message/messageModel';
+import MessageModal from '@/components/message/ConversationsList';
 
 export default function ProductByIdPage() {
   const params = useParams();
