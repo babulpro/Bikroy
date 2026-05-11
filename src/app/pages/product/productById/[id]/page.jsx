@@ -163,7 +163,7 @@ export default function ProductByIdPage() {
           <span className="text-gray-400">/</span>
           <Link href="/pages/product/categories" className="hover:text-blue-600">Categories</Link>
           <span className="text-gray-400">/</span>
-          <Link href={`/pages/product/category/${product.categoryId}`} className="hover:text-blue-600 line-clamp-1 max-w-[120px] sm:max-w-none">
+          <Link href={`/pages/product/categories/${product.categoryId}`} className="hover:text-blue-600 line-clamp-1 max-w-[120px] sm:max-w-none">
             {product.category?.name || 'Products'}
           </Link>
           <span className="text-gray-400">/</span>

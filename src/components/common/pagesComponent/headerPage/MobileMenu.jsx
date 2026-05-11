@@ -28,7 +28,7 @@ export default function MobileMenu({ isOpen, onClose, navLinks, isLoggedIn, user
         <>
           <hr className="my-2 border-blue-500" />
           <Link href="/pages/user/profile" onClick={onClose} className="block py-2.5 text-white hover:text-yellow-300">My Profile</Link>
-          <Link href="/pages/user/myProducts" onClick={onClose} className="block py-2.5 text-white hover:text-yellow-300">My Products</Link>
+          <Link href="/pages/user/product" onClick={onClose} className="block py-2.5 text-white hover:text-yellow-300">My Products</Link>
           <Link href="/pages/user/address" onClick={onClose} className="block py-2.5 text-white hover:text-yellow-300">My Address</Link>
           <Link href="/favorites" onClick={onClose} className="block py-2.5 text-white hover:text-yellow-300">Favorites</Link>
           <Link href="/pages/user/messages" onClick={onClose} className="block py-2.5 text-white hover:text-yellow-300">Messages</Link>
