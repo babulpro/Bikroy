@@ -43,8 +43,7 @@ export async function POST(request) {
             );
         }
         
-    } catch (error) {
-        console.error("Reverse geocoding error:", error);
+    } catch (error) { 
         return NextResponse.json(
             { status: "fail", msg: "Something went wrong" },
             { status: 500 }

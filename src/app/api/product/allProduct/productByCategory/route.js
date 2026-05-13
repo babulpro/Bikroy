@@ -42,8 +42,7 @@ export async function GET(request) {
       orderBy: {
         createdAt: 'desc'
       }
-    });
-    console.log(products);
+    }); 
 
     return NextResponse.json({
       success: true,
@@ -60,8 +59,7 @@ export async function GET(request) {
       }
     });
 
-  } catch (error) {
-    console.error('Fetch products by category error:', error);
+  } catch (error) { 
     return NextResponse.json(
       { error: error.message || 'Failed to fetch products' },
       { status: 500 }

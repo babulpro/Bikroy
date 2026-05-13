@@ -90,8 +90,7 @@ export async function POST(request) {
 
         return NextResponse.json({ status: "success", msg: "Address created successfully", data: newAddress }, { status: 201 });
 
-    } catch (error) {
-        console.error('Address creation error:', error);
+    } catch (error) { 
         return NextResponse.json({ status: "fail", msg: "Something went wrong" }, { status: 500 });
     }
 }
@@ -118,8 +117,7 @@ export async function GET(request) {
 
         return NextResponse.json({ status: "success", data: addresses });
 
-    } catch (error) {
-        console.error('Fetch addresses error:', error);
+    } catch (error) { 
         return NextResponse.json({ status: "fail", msg: "Something went wrong" }, { status: 500 });
     }
 }

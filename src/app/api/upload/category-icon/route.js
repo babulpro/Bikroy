@@ -76,8 +76,7 @@ export async function POST(request) {
 
     const result = await cloudinaryResponse.json();
 
-    if (!cloudinaryResponse.ok) {
-      console.error('Cloudinary error:', result);
+    if (!cloudinaryResponse.ok) { 
       return NextResponse.json(
         { error: result.error?.message || 'Cloudinary upload failed' },
         { status: 500 }
@@ -94,8 +93,7 @@ export async function POST(request) {
       }
     });
 
-  } catch (error) {
-    console.error('Icon upload error:', error);
+  } catch (error) { 
     return NextResponse.json(
       { error: error.message || 'Failed to upload icon' },
       { status: 500 }

@@ -1,4 +1,4 @@
-// src/app/pages/product/item/addProduct/page.jsx
+ 
 'use client';
 
 

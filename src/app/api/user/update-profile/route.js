@@ -72,8 +72,7 @@ export async function PUT(request) {
       user: updatedUser
     });
 
-  } catch (error) {
-    console.error('Update profile error:', error);
+  } catch (error) { 
     return NextResponse.json(
       { status: 'fail', msg: error.message || 'Something went wrong' },
       { status: 500 }

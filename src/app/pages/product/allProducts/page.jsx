@@ -1,4 +1,4 @@
-// src/app/pages/product/allProducts/page.jsx (Server Component)
+ 
 import AllProductsClient from '@/components/common/pagesComponent/product/component/AllProduct';
 import { Suspense } from 'react';
  

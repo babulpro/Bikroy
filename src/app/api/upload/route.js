@@ -309,9 +309,9 @@ async function getUserUploadCount(userId) {
 async function logUploadActivity(userId, publicId, productId) {
   try {
     // You can store this in a database table for monitoring
-    console.log(`[UPLOAD] User: ${userId}, PublicId: ${publicId}, Product: ${productId || 'new'}, Time: ${new Date().toISOString()}`);
+    console.log('congrtulations! Image uploaded successfully', );
   } catch (error) {
     // Don't fail the main operation if logging fails
-    console.error('Logging failed:', error);
+    console.error('Logging failed');
   }
 }

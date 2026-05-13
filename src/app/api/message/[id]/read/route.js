@@ -85,8 +85,7 @@ export async function POST(request) {
       data: { ...message, isOwn: true }
     }, { status: 201 });
 
-  } catch (error) {
-    console.error('Send message error:', error);
+  } catch (error) { 
     return NextResponse.json({ error: 'Failed to send message' }, { status: 500 });
   }
 }
@@ -133,8 +132,7 @@ export async function GET(request) {
       data: messages.map(msg => ({ ...msg, isOwn: msg.senderId === decoded.id }))
     });
 
-  } catch (error) {
-    console.error('Fetch messages error:', error);
+  } catch (error) { 
     return NextResponse.json({ error: 'Failed to fetch messages' }, { status: 500 });
   }
 }

@@ -23,8 +23,7 @@ export async function GET() {
       decoded: decoded,
       tokenPreview: token.substring(0, 50) + '...'
     });
-  } catch (error) {
-    console.error('Verify token error:', error);
+  } catch (error) { 
     return NextResponse.json({ 
       success: false,
       error: error.message 

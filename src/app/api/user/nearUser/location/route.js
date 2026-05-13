@@ -53,8 +53,7 @@ export async function GET(request) {
             data: locationStats
         });
         
-    } catch (error) {
-        console.error("Location fetch error:", error);
+    } catch (error) { 
         return NextResponse.json(
             { status: "fail", msg: "Something went wrong" },
             { status: 500 }

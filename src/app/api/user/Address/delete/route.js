@@ -8,8 +8,7 @@ import { NextResponse } from "next/server";
 export async function DELETE(request,response) {
     try {
         const { searchParams } = new URL(request.url);
-        const id = searchParams.get('id');
-        console.log('Address ID to delete:', id);
+        const id = searchParams.get('id'); 
         const cookieStore = await cookies();
         const token = cookieStore.get('token')?.value;
 
@@ -53,8 +52,7 @@ export async function DELETE(request,response) {
             msg: "Address deleted successfully"
         });
 
-    } catch (error) {
-        console.error('Delete address error:', error);
+    } catch (error) { 
         return NextResponse.json(
             { status: "fail", msg: error.message || "Something went wrong" }, 
             { status: 500 }

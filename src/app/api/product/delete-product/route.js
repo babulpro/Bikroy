@@ -53,8 +53,7 @@ export async function DELETE(request) {
       msg: 'Product deleted successfully'
     });
 
-  } catch (error) {
-    console.error('Delete product error:', error);
+  } catch (error) { 
     return NextResponse.json(
       { status: 'fail', msg: error.message || 'Something went wrong' },
       { status: 500 }

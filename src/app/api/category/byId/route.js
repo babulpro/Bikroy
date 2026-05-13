@@ -5,35 +5,9 @@ import prisma from "@/app/Utility/prisma/prisma";
 export async function GET(request ) {
   try {
      const {searchPrams} = new URL(request.url);
-     const id = searchPrams.get('id');
-     console.log("Category ID is found #####:", id);
+     const id = searchPrams.get('id'); 
 
-    //  if (!id) {
-    //    return NextResponse.json(
-    //      { status: "fail", msg: "Category ID is required" },
-    //      { status: 400 }
-    //    );
-    //  }
-      // const categoryId = parseInt(id);
-    // const category = await prisma.category.findUnique({
-    //   where: { id: categoryId },
-    //   include: {
-    //     product: {
-    //       select: {
-    //         id: true,
-    //         name: true,
-    //       }
-
-    //     }
-    //   }
-    // });
-
-    // if (!category) {
-    //   return NextResponse.json(
-    //     { status: "fail", msg: "Category not found" },
-    //     { status: 404 }
-    //   );
-    // }
+    
 
     return NextResponse.json({
       status: "success",

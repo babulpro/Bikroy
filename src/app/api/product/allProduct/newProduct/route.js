@@ -145,8 +145,7 @@ export async function POST(request) {
       data: product
     }, { status: 201 });
 
-  } catch (error) {
-    console.error('Product creation error:', error);
+  } catch (error) { 
     
     // Handle unique constraint error
     if (error.code === 'P2002' && error.meta?.target?.includes('name')) {
@@ -265,8 +264,7 @@ export async function GET(request) {
       }
     });
 
-  } catch (error) {
-    console.error('Fetch products error:', error);
+  } catch (error) { 
     return NextResponse.json(
       { error: error.message || 'Failed to fetch products' },
       { status: 500 }

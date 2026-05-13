@@ -92,8 +92,7 @@ export async function POST(request) {
             }
         });
         
-    } catch (error) {
-        console.error("Nearby users error:", error);
+    } catch (error) { 
         return NextResponse.json(
             { status: "fail", msg: "Something went wrong" },
             { status: 500 }

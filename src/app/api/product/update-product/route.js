@@ -92,8 +92,7 @@ export async function PUT(request) {
       product: updatedProduct
     });
 
-  } catch (error) {
-    console.error('Update product error:', error);
+  } catch (error) { 
     return NextResponse.json(
       { status: 'fail', msg: error.message || 'Something went wrong' },
       { status: 500 }

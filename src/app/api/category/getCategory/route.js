@@ -51,8 +51,7 @@ export async function GET(request) {
       total: categoriesWithCount.length
     });
 
-  } catch (error) {
-    console.error('Fetch categories error:', error);
+  } catch (error) { 
     return NextResponse.json(
       { status: "fail", msg: error.message || "Failed to fetch categories" },
       { status: 500 }

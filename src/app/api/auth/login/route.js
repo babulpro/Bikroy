@@ -150,9 +150,7 @@ export async function POST(request) {
 
         return response;
 
-    } catch (error) {
-        console.error('Login error:', error);
-        // Don't expose internal error details
+    } catch (error) { 
         return NextResponse.json(
             { status: "fail", msg: "Something went wrong. Please try again." },
             { status: 500 }

@@ -57,8 +57,7 @@ export async function PUT(request) {
             data: newAddress
         });
         
-    } catch (error) {
-        console.error("Location update error:", error);
+    } catch (error) { 
         return NextResponse.json(
             { status: "fail", msg: "Something went wrong" },
             { status: 500 }

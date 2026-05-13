@@ -98,8 +98,7 @@ export async function GET(request) {
       data: conversationList
     });
 
-  } catch (error) {
-    console.error('Fetch conversations error:', error);
+  } catch (error) { 
     return NextResponse.json(
       { error: error.message || 'Failed to fetch conversations' },
       { status: 500 }

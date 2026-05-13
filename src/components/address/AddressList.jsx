@@ -1,4 +1,4 @@
-// src/app/pages/user/addresses/AddressList.jsx
+ 
 'use client';
 
 import { useState, useEffect } from 'react';

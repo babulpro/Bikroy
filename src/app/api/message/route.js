@@ -93,8 +93,7 @@ export async function POST(request) {
       data: messageWithFlag
     }, { status: 201 });
 
-  } catch (error) {
-    console.error('Send message error:', error);
+  } catch (error) { 
     return NextResponse.json(
       { error: error.message || 'Failed to send message' },
       { status: 500 }
@@ -181,8 +180,7 @@ export async function GET(request) {
       data: messagesWithFlag
     });
 
-  } catch (error) {
-    console.error('Fetch messages error:', error);
+  } catch (error) { 
     return NextResponse.json(
       { error: error.message || 'Failed to fetch messages' },
       { status: 500 }

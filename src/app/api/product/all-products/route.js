@@ -108,9 +108,7 @@ export async function GET(request) {
         take: limit
       }),
       prisma.product.count({ where: filter })
-    ]);
-
-    console.log('Filter applied:', { division, district, thana, total });
+    ]); 
 
     return NextResponse.json({
       status: 'success',
@@ -129,8 +127,7 @@ export async function GET(request) {
       }
     });
 
-  } catch (error) {
-    console.error('Fetch products error:', error);
+  } catch (error) { 
     return NextResponse.json(
       { status: 'fail', msg: error.message || 'Failed to fetch products' },
       { status: 500 }

@@ -50,8 +50,7 @@ export async function GET(request) {
       total: products.length
     });
 
-  } catch (error) {
-    console.error('Error fetching featured products:', error);
+  } catch (error) { 
     return NextResponse.json(
       { status: 'fail', msg: error.message || 'Failed to fetch products' },
       { status: 500 }

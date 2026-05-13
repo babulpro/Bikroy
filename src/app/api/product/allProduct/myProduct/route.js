@@ -56,8 +56,7 @@ export async function GET(request) {
         
         return NextResponse.json({ status: "success", products: myProducts }, { status: 200 });
         
-    } catch (error) {
-        console.error('Fetch my products error:', error);
+    } catch (error) { 
         return NextResponse.json({ status: "fail", msg: "Something went wrong" }, { status: 500 });
     }
 }

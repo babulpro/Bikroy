@@ -126,8 +126,7 @@ export async function POST(request) {
             }
         });
 
-    } catch (error) {
-        console.error('Upload error:', error);
+    } catch (error) { 
         return NextResponse.json(
             { error: "Upload failed: " + error.message },
             { status: 500 }

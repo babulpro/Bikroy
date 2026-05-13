@@ -1,4 +1,4 @@
-// src/app/pages/product/[id]/page.jsx
+ 
 'use client';
 
 import { useState, useEffect } from 'react';
